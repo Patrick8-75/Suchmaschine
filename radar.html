@@ -1,0 +1,1894 @@
+<title>Maschinensuche-Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EAEAE6; --surface: #FFFFFF; --surface-2: #F1F1EB; --text: #201F1B; --text-muted: #605F58;
+    --border: #D8D7CC; --accent: #B5650C; --accent-strong: #8F4E08; --accent-soft: #F5E4CE;
+    --preis: #2B6E74; --tag-land-bg: #E4EFDD; --tag-land-text: #3E6B2A; --tag-bau-bg: #FCE7D6; --tag-bau-text: #97490F;
+    --shadow: 0 1px 2px rgba(32,31,27,0.06), 0 4px 14px rgba(32,31,27,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #15140F; --surface: #1D1C16; --surface-2: #232219; --text: #EAE8E1; --text-muted: #A19E92;
+      --border: #302E24; --accent: #E5A542; --accent-strong: #F0BC6C; --accent-soft: #382A12;
+      --preis: #6FC3C9; --tag-land-bg: #253321; --tag-land-text: #92C97F; --tag-bau-bg: #3A2914; --tag-bau-text: #F0A868;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #15140F; --surface: #1D1C16; --surface-2: #232219; --text: #EAE8E1; --text-muted: #A19E92;
+    --border: #302E24; --accent: #E5A542; --accent-strong: #F0BC6C; --accent-soft: #382A12;
+    --preis: #6FC3C9; --tag-land-bg: #253321; --tag-land-text: #92C97F; --tag-bau-bg: #3A2914; --tag-bau-text: #F0A868;
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.3);
+  }
+  *{ box-sizing: border-box; }
+  body{ margin: 0; background: var(--bg); color: var(--text); font-family: "Public Sans", -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; }
+  .wrap{ max-width: 1000px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  header{ display: flex; flex-direction: column; gap: 1.1rem; margin-bottom: 2rem; }
+  .eyebrow{
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.11em; text-transform: uppercase;
+    color: var(--accent-strong); display: flex; align-items: center; gap: 0.5rem;
+  }
+  .eyebrow::before{ content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  h1{ font-family: "Oswald", "Arial Narrow", sans-serif; font-weight: 600; font-size: clamp(1.9rem, 4vw, 2.6rem); letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+  .sub{ color: var(--text-muted); max-width: 68ch; font-size: 0.98rem; }
+  .sub b{ color: var(--text); font-weight: 600; }
+  .stats{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.7rem; margin-top: 0.4rem; }
+  .stat{ background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; box-shadow: var(--shadow); }
+  .stat .n{ font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 1.5rem; font-variant-numeric: tabular-nums; display: block; line-height: 1.1; }
+  .stat .n.accent{ color: var(--accent-strong); }
+  .stat .l{ font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.25rem; display: block; }
+  .kategorie-kopf{ display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1rem; }
+  .kategorie-kopf h2{ font-family: "Oswald", sans-serif; font-weight: 600; font-size: 1.4rem; margin: 0; }
+  .gruppen-tag{ font-family: "IBM Plex Mono", monospace; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 6px; }
+  .gruppen-tag.bau{ background: var(--tag-bau-bg); color: var(--tag-bau-text); }
+  .gruppen-tag.land{ background: var(--tag-land-bg); color: var(--tag-land-text); }
+  .kategorie-anzahl{ font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: var(--text-muted); margin-left: auto; }
+  .unterkategorie{ margin-bottom: 2rem; }
+  .hersteller-block{ margin-bottom: 1.1rem; }
+  .hersteller-titel{
+    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0 0 0.5rem 0;
+  }
+  .karten-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.7rem; }
+  .karte{ background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .karte-titel a{ color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.96rem; line-height: 1.3; }
+  .karte-titel a:hover{ color: var(--accent-strong); text-decoration: underline; }
+  .karte-titel a:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  .karte-preis{ font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; color: var(--preis); font-weight: 600; font-size: 1.15rem; }
+  .karte-meta{ display: flex; flex-wrap: wrap; gap: 0.35rem; font-size: 0.78rem; color: var(--text-muted); align-items: center; }
+  .meta-chip{ display: inline-flex; align-items: center; gap: 0.3rem; font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 0.1rem 0.45rem; }
+  footer{ margin-top: 1.8rem; font-size: 0.82rem; color: var(--text-muted); text-align: center; }
+  footer a{ color: var(--accent-strong); }
+</style>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">P.Urny Handel &middot; Maschinensuche</span>
+    <h1>Maschinensuche-Radar</h1>
+    <p class="sub">Zeigt automatisch nur Treffer der letzten <b>24 Stunden</b>, sortiert nach Preis aufsteigend. Preise werden als Nettopreise angenommen, sofern nicht anders angegeben - keine automatische Brutto/Netto-Prüfung. Stand: 22.08.2026, 09:01 UTC.</p>
+    <div class="stats">
+      <div class="stat"><span class="n accent">179</span><span class="l">Treffer (24h)</span></div>
+      <div class="stat"><span class="n">63</span><span class="l">aus letztem Lauf</span></div>
+    </div>
+  </header>
+  
+    <div class="unterkategorie">
+      <div class="kategorie-kopf">
+        <span class="gruppen-tag land">Landmaschine</span>
+        <h2>Maispflücker / Erntevorsatz</h2>
+        <span class="kategorie-anzahl">75 Treffer</span>
+      </div>
+      
+      <div class="hersteller-block">
+        <p class="hersteller-titel">Claas &middot; 50</p>
+        <div class="karten-grid">
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/maispfluecker-claas-conspeed-corio-8-75-fc-hr-hybridwalze/3331911177-276-1457" target="_blank" rel="noopener">Maispflücker Claas Conspeed Corio 8-75 FC-HR Hybridwalze</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/maispfluecker-claas-conspeed-8-75-fc-zum-lexion-brutto/3331911718-276-1457" target="_blank" rel="noopener">Maispflücker Claas Conspeed 8-75 FC zum Lexion BRUTTO</a></div>
+      <div class="karte-preis">18.500 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-corio-conspeed-verschleissteile/3487834165-276-2545" target="_blank" rel="noopener">Claas Corio Conspeed Verschleissteile</a></div>
+      <div class="karte-preis">600 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 31675 Bückeburg</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-tucano-320-vario560-conspeed-6-70c/3355866191-276-9417" target="_blank" rel="noopener">CLAAS TUCANO 320 /VARIO560 + CONSPEED 6.70C</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 20099 Hamburg St. Georg</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-corio-875-fc-conspeed-hybridwalzen/3483101640-276-8050" target="_blank" rel="noopener">Claas Claas Corio 875 FC Conspeed Hybridwalzen</a></div>
+      <div class="karte-preis">70.210 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-8-75-fc-landwirtmaschine/3483101548-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 8 75 FC Landwirtmaschine</a></div>
+      <div class="karte-preis">58.310 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-8-75-fc-hybridwalzen-8-reihig/3483101512-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 8 75 FC Hybridwalzen, 8 Reihig</a></div>
+      <div class="karte-preis">35.581 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-corio-675-fc-conspeed-neu-75-cm/3483101308-276-8050" target="_blank" rel="noopener">Claas Claas Corio 675 FC Conspeed   NEU    75 cm</a></div>
+      <div class="karte-preis">70.210 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-6-75-fc-konische-walzen/3483101256-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 6 75 FC konische Walzen</a></div>
+      <div class="karte-preis">29.631 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-6-75-fc-dom-mega-klappbar-konisch/3483101178-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 6 75 FC Dom/Mega klappbar konisch</a></div>
+      <div class="karte-preis">32.011 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-6-75-fc-hydraulisch-klappbar-bj/3483101155-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 6 75 FC, hydraulisch klappbar, bj</a></div>
+      <div class="karte-preis">22.610 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-conspeed-4-75-c-linear/3483101003-276-8050" target="_blank" rel="noopener">Claas Claas Conspeed 4 75 C linear</a></div>
+      <div class="karte-preis">29.631 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-claas-maispfluecker-conspeed-6-75-fc/3483100807-276-8050" target="_blank" rel="noopener">Claas Claas Maispflücker Conspeed 6 75 FC</a></div>
+      <div class="karte-preis">30.821 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-corio-875-fc-conspeed-maispfluecker-300045726/3482673247-276-3030" target="_blank" rel="noopener">Claas CORIO 875 FC CONSPEED Maispflücker / 300045726</a></div>
+      <div class="karte-preis">47.481 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 49716 Meppen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-maispfluecker-conspeed-8-75fc-maispfluecker/3433035806-276-7604" target="_blank" rel="noopener">Claas MAISPFLÜCKER CONSPEED 8-75FC Maispflücker</a></div>
+      <div class="karte-preis">29.155 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 85088 Vohburg an der Donau</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-pfluecker-hauben/3481763321-276-7460" target="_blank" rel="noopener">Claas Conspeed Pflücker/Hauben</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94152 Neuhaus am Inn</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-corio-8-75-fc-conspeed-maispfluecker-300403509/3478368932-276-3030" target="_blank" rel="noopener">Claas CORIO 8-75 FC CONSPEED Maispflücker / 300403509</a></div>
+      <div class="karte-preis">71.281 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 49716 Meppen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-horizontalhaeckslerarm/3027125499-276-1457" target="_blank" rel="noopener">Claas Conspeed Horizontalhäckslerarm</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-pflueckeinheiten-getriebe/3027122449-276-1457" target="_blank" rel="noopener">Claas Conspeed Pflückeinheiten/Getriebe</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/pflueckerketten-set-claas-conspeed-maispfluecker-0009988521/3291017026-276-17538" target="_blank" rel="noopener">Pflückerketten Set CLAAS Conspeed Maispflücker 0009988521</a></div>
+      <div class="karte-preis">107 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 49696 Molbergen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-lagermaisschnecken-gebraucht/3183096822-276-1457" target="_blank" rel="noopener">Claas Conspeed Lagermaisschnecken Gebraucht</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-winkelgetriebe-905-827/3183088221-276-1457" target="_blank" rel="noopener">Claas Conspeed Winkelgetriebe 905.827</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-maispfluecker-ketten-00-0998-852-1/2630205095-276-1457" target="_blank" rel="noopener">Claas Conspeed Maispflücker Ketten 00 0998 852 1</a></div>
+      <div class="karte-preis">75 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-rovio-4-875fc-maispfluecker-kein-conspeed/3474857775-276-8036" target="_blank" rel="noopener">Claas Rovio 4.875FC Maispflücker, kein Conspeed</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77966 Kappel-​Grafenhausen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/claas-conspeed-lagermaisschnecken-neu/3180193850-276-1457" target="_blank" rel="noopener">Claas Conspeed Lagermaisschnecken NEU</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59302 Oelde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-liner+1650/i-22436197" target="_blank" rel="noopener">Heuwender CLAAS Liner 1650</a></div>
+      <div class="karte-preis">7.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Prüm</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-arion+610+hexashift+stage+v+cis/i-22366162" target="_blank" rel="noopener">Arion 610 Hexashift Stage V CIS Claas Arion 610 Hexashift Stage V CIS</a></div>
+      <div class="karte-preis">75.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Wallersheim</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-xerion+4000+vc/i-22133517" target="_blank" rel="noopener">Traktor Claas Xerion 4000 VC</a></div>
+      <div class="karte-preis">179.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Tallinn</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/manitou-mt1335/i-21976828" target="_blank" rel="noopener">Teleskoplader Manitou MT1335</a></div>
+      <div class="karte-preis">37.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/manitou-mt932/i-21976813" target="_blank" rel="noopener">Teleskoplader Manitou MT932</a></div>
+      <div class="karte-preis">36.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-535-125/i-21976818" target="_blank" rel="noopener">Teleskoplader JCB 535-125</a></div>
+      <div class="karte-preis">39.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-533-105/i-21976823" target="_blank" rel="noopener">Teleskoplader JCB 533-105</a></div>
+      <div class="karte-preis">30.500 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-540-140/i-21976843" target="_blank" rel="noopener">Teleskoplader JCB 540-140</a></div>
+      <div class="karte-preis">35.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-535-95%2C+joystick/i-21976803" target="_blank" rel="noopener">Teleskoplader JCB 535-95, Joystick</a></div>
+      <div class="karte-preis">34.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/caterpillar-th514/i-21840363" target="_blank" rel="noopener">Teleskoplader - 5 t CATERPILLAR TH514</a></div>
+      <div class="karte-preis">32.800 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rimini</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-axos+310/i-21772268" target="_blank" rel="noopener">Traktor Claas Axos 310</a></div>
+      <div class="karte-preis">36.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Aurillac</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/konig-konig+rex+claasic+2+with+eco+twin800/i-20608545" target="_blank" rel="noopener">Konig Bon Roll Linie Konig konig rex claasic 2 with eco twin800</a></div>
+      <div class="karte-preis">–</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Bat Yam</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-531-70/i-21420932" target="_blank" rel="noopener">Teleskoplader JCB 531-70</a></div>
+      <div class="karte-preis">35.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-arion+470+cis%2B+ackerschlepper/i-19511976" target="_blank" rel="noopener">Traktor CLAAS Arion 470 CIS+ Ackerschlepper</a></div>
+      <div class="karte-preis">75.496 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Eilenburg</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-scorpion+746+teleskoplader/i-19366641" target="_blank" rel="noopener">Teleskoparmstapler Claas Scorpion 746 Teleskoplader</a></div>
+      <div class="karte-preis">39.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Legden</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/jcb-531-70+agri/i-21420907" target="_blank" rel="noopener">Teleskoplader JCB 531-70 Agri</a></div>
+      <div class="karte-preis">68.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederer Fläming</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-scorpion+6035+inkl.+schaufel+top+zustand/i-18063771" target="_blank" rel="noopener">Teleskoplader Claas Scorpion 6035 inkl. Schaufel Top Zustand</a></div>
+      <div class="karte-preis">37.731 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Schloß Holte-Stukenbrock</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-axos+310+mit+frontlader+fl80/i-18057996" target="_blank" rel="noopener">Van Claas Axos 310 mit Frontlader FL80</a></div>
+      <div class="karte-preis">37.500 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Heilbronn</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-dominator+76/i-16856181" target="_blank" rel="noopener">Mähdrescher Claas Dominator 76</a></div>
+      <div class="karte-preis">18.487 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-lexion+760/i-16730631" target="_blank" rel="noopener">Mähdrescher Claas Lexion 760</a></div>
+      <div class="karte-preis">144.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-1100t+volto/i-16565371" target="_blank" rel="noopener">Futtertechnik Claas 1100T Volto</a></div>
+      <div class="karte-preis">9.500 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-volto+1100/i-16339547" target="_blank" rel="noopener">Futtertechnik Claas Volto 1100</a></div>
+      <div class="karte-preis">10.084 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-cargos+8400/i-16134092" target="_blank" rel="noopener">Ladewagen Claas Cargos 8400</a></div>
+      <div class="karte-preis">–</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-jaguar+950/i-16127320" target="_blank" rel="noopener">Häcksler Claas Jaguar 950</a></div>
+      <div class="karte-preis">250.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/claas-disco+8400+c+butterfly/i-16038557" target="_blank" rel="noopener">Mäher Claas Disco 8400 C Butterfly</a></div>
+      <div class="karte-preis">19.900 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Kassel</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Claas Conspeed</span>
+      </div>
+    </div></div>
+      </div>
+      <div class="hersteller-block">
+        <p class="hersteller-titel">Geringhoff &middot; 25</p>
+        <div class="karten-grid">
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-maispfluecker-maehdrescher-deutz-fahr-claas-john-deere/3491106500-276-1649" target="_blank" rel="noopener">Geringhoff Maispflücker Mähdrescher Deutz Fahr Claas John Deere</a></div>
+      <div class="karte-preis">4.580 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 33378 Rheda-​Wiedenbrück</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-warntafel/3306596388-276-5690" target="_blank" rel="noopener">Geringhoff Warntafel</a></div>
+      <div class="karte-preis">500 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 84405 Dorfen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-maispfluecker-maehdrescher-deutz-fahr-claas-john-deere/3490354239-276-1649" target="_blank" rel="noopener">Geringhoff Maispflücker  Mähdrescher Deutz Fahr Claas John Deere</a></div>
+      <div class="karte-preis">8.580 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 33378 Rheda-​Wiedenbrück</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/ziegler-8s-cornchampion-maispfluecker-maehdrescher-geringhoff-claas/3489793299-276-1649" target="_blank" rel="noopener">Ziegler 8S CornChampion Maispflücker Mähdrescher Geringhoff Claas</a></div>
+      <div class="karte-preis">17.580 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 33378 Rheda-​Wiedenbrück</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/maispfluecker-geringhoff-msh875-8-reihig/3459363799-276-6050" target="_blank" rel="noopener">Maispflücker Geringhoff MSH875, 8 reihig</a></div>
+      <div class="karte-preis">65.390 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 84183 Niederviehbach</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-maispfluecker-claas-lexion-8-75-horizon-star-16500-/3357769338-276-1302" target="_blank" rel="noopener">Geringhoff Maispflücker  Claas Lexion 8-75 Horizon Star  16500 €</a></div>
+      <div class="karte-preis">19.635 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48231 Warendorf</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-rota-disc-maispfluecker-300499569/3460849727-276-12369" target="_blank" rel="noopener">Geringhoff ROTA-DISC Maispflücker / 300499569</a></div>
+      <div class="karte-preis">29.631 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 39240 Calbe (Saale)</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-spitze-haube/3485282593-276-9040" target="_blank" rel="noopener">Geringhoff Spitze, Haube</a></div>
+      <div class="karte-preis">40 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77652 Offenburg</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-haube-spitze/3485280895-276-9040" target="_blank" rel="noopener">Geringhoff Haube, Spitze</a></div>
+      <div class="karte-preis">70 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77652 Offenburg</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-claas-maispfluecker-teile/3248451556-276-2596" target="_blank" rel="noopener">geringhoff claas maispflücker teile</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 49681 Garrel</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-horizont-star-8-rhg-klappbar/3458550921-276-5924" target="_blank" rel="noopener">Geringhoff Horizont Star, 8 rhg., klappbar</a></div>
+      <div class="karte-preis">54.000 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 84329 Wurmannsquick</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/andere-geringhoff-mais-star-horizon-1600b-16-reihig/3483102097-276-8050" target="_blank" rel="noopener">Andere Geringhoff Mais Star Horizon 1600B 16 Reihig</a></div>
+      <div class="karte-preis">77.231 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/andere-geringhoff-mais-star-horizon-msh-600-f-6-reihi/3483101978-276-8050" target="_blank" rel="noopener">Andere Geringhoff Mais Star Horizon (MSH 600 F) 6 reihi</a></div>
+      <div class="karte-preis">34.510 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77743 Neuried</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-mais-pfluecker-6-reiher-rota-disc/3482735508-276-8047" target="_blank" rel="noopener">Geringhoff Mais Pflücker 6 Reiher Rota Disc</a></div>
+      <div class="karte-preis">9.000 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 77933 Lahr (Schwarzwald)</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-flex-30-bandschneidwerk-draper/3482705882-276-3814" target="_blank" rel="noopener">Geringhoff Flex 30 Bandschneidwerk Draper</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 02827 Görlitz</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-adaption-fuer-new-holland-cr-10-90-gesucht/3482361252-276-16773" target="_blank" rel="noopener">Geringhoff Adaption für New Holland CR 10.90 gesucht</a></div>
+      <div class="karte-preis">1 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48157 Coerde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-msh-800-maispfluecker/3481816920-276-4682" target="_blank" rel="noopener">Geringhoff MSH 800 Maispflücker</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 35410 Hungen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-horizon-star-ii-maehdrescher-vorsaetze-300403944/3455984613-276-3030" target="_blank" rel="noopener">Geringhoff HORIZON STAR II Mähdrescher Vorsätze / 300403944</a></div>
+      <div class="karte-preis">63.665 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 49716 Meppen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-msh600-800-haeckslermesser-506082-hz-messer-502692-506/3216029448-276-13525" target="_blank" rel="noopener">Geringhoff MSH600 800 Häckslermesser 506082 HZ Messer 502692, 506</a></div>
+      <div class="karte-preis">25 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94501 Aldersbach</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-hvv-600-vario-schneidwerk/3479334510-276-5919" target="_blank" rel="noopener">Geringhoff HVV 600  vario Schneidwerk</a></div>
+      <div class="karte-preis">38.700 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 84359 Simbach</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/1-gebr-geringhoff-schneidwerk-variostar-vs-260-neuwertig-z-zuern/2975966311-276-1900" target="_blank" rel="noopener">1 gebr. Geringhoff-Schneidwerk Variostar VS 260 neuwertig z. Zürn</a></div>
+      <div class="karte-preis">18.875 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 32108 Bad Salzuflen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/-maispfluecker-geringhoff-ms-horizon-fb-800-new-holland-case/3477494634-276-1442" target="_blank" rel="noopener">Maispflücker, Geringhoff MS Horizon,FB 800, New Holland,Case</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48317 Drensteinfurt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-ersatzketten-fuer-maisgebisse/3476973331-276-16980" target="_blank" rel="noopener">GERINGHOFF Ersatzketten für Maisgebisse</a></div>
+      <div class="karte-preis">15 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 02733 Cunewalde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/geringhoff-ersatzkettenraeder-fuer-maisgebisse/3476936736-276-16980" target="_blank" rel="noopener">GERINGHOFF Ersatzkettenräder für Maisgebisse</a></div>
+      <div class="karte-preis">10 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 02733 Cunewalde</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/adaptionsteile-geringhoff-case-2388-und-5088-6088-7088/3475749176-276-8827" target="_blank" rel="noopener">Adaptionsteile Geringhoff Case 2388 und 5088/6088/7088</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 76344 Eggenstein-​Leopoldshafen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Geringhoff</span>
+      </div>
+    </div></div>
+      </div>
+    </div>
+
+    <div class="unterkategorie">
+      <div class="kategorie-kopf">
+        <span class="gruppen-tag bau">Baumaschine</span>
+        <h2>Minibagger</h2>
+        <span class="kategorie-anzahl">104 Treffer</span>
+      </div>
+      
+      <div class="hersteller-block">
+        <p class="hersteller-titel">Takeuchi &middot; 104</p>
+        <div class="karten-grid">
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/kettenbagger/takeuchi-tb175-gebraucht-creb6461gb" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">20.950 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 2400 MOL, Belgien</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/kettenbagger/takeuchi-tb175-gebraucht-dowm2258nq" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">21.500 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 2400 MOL, Belgien</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/mobilbagger/takeuchi-tb175w-3-buckets-gebraucht-qnar5401cp" target="_blank" rel="noopener">Takeuchi TB175W 3 Buckets!</a></div>
+      <div class="karte-preis">26.500 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 7609 RL Almelo, Niederlande</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/mobilbagger/takeuchi-tb-175-w-gebraucht-fwfs1598fn" target="_blank" rel="noopener">Takeuchi TB 175 w</a></div>
+      <div class="karte-preis">28.400 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 69780 Mions Rhône-Alpes, Frankreich</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/kettenbagger/takeuchi-tb-175-gebraucht-ckrk6034jl" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">29.500 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 5743 Krimml, Österreich</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/kettenbagger/takeuchi-tb-175-gebraucht-bmvf5121ec" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">38.000 EUR</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 9020 Klagenfurt, Österreich</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb145-modell/3488122909-249-1377" target="_blank" rel="noopener">Takeuchi TB145 Modell</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59379 Selm</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/antriebsrad-0261603100-takeuchi-tb145-tb045-tb250-tb53fr-nachbau/2748331380-276-7461" target="_blank" rel="noopener">Antriebsrad 0261603100 Takeuchi TB145/TB045/TB250/TB53FR Nachbau</a></div>
+      <div class="karte-preis">166 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tuere-kpl-mit-rahmen-0568629200-tb125-tb135-tb145-tb175/3437520017-276-7461" target="_blank" rel="noopener">Takeuchi Türe kpl mit Rahmen 0568629200 TB125/TB135/TB145/TB175</a></div>
+      <div class="karte-preis">3.600 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/leitrad-0461490010-takeuchi-tb145-tb045-tb250-tb53fr-/2716649280-276-7461" target="_blank" rel="noopener">Leitrad 0461490010 Takeuchi TB145/TB045/TB250/TB53FR,</a></div>
+      <div class="karte-preis">399 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-145-netto-25500-/2687999577-276-7467" target="_blank" rel="noopener">Takeuchi TB 145 NETTO 25500,-</a></div>
+      <div class="karte-preis">30.600 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94110 Wegscheid</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tuerschloss-tuerverriegelung-komplett-neu-tb145-175-135-25/1815999785-276-1306" target="_blank" rel="noopener">Takeuchi Türschloss Türverriegelung Komplett NEU TB145 175 135 25</a></div>
+      <div class="karte-preis">149 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48351 Everswinkel</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-145/3480863092-276-3192" target="_blank" rel="noopener">Takeuchi TB 145</a></div>
+      <div class="karte-preis">23.999 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 30459 Ricklingen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/fahrantrieb-kettenantrieb-fahrmotor-takeuchi-tb145/1033078282-276-6830" target="_blank" rel="noopener">Fahrantrieb, Kettenantrieb, Fahrmotor Takeuchi TB145</a></div>
+      <div class="karte-preis">2.155 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 90425 Nordstadt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/grammer-sitzpolster-fuer-z-b-kubota-kx080-3-kx080-4-wacker-neuson-6003-6503-takeuchi-tb135-tb145-tb175-minibagger-mobilbagger-sitzkissen-polster-sitz-baumaschine-kramer-580/2681631003-276-9145" target="_blank" rel="noopener">GRAMMER Sitzpolster für z.B. Kubota KX080-3 KX080-4 Wacker Neuson 6003 6503 Takeuchi TB135 TB145 TB175 Minibagger Mobilbagger Sitzkissen Polster Sitz Baumaschine Kramer 580</a></div>
+      <div class="karte-preis">273 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 91631 Wettringen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/reparatursatz-buchsen-bolzen-loeffelaufnahme-takeuchi-tb145-tb250/2889103531-276-7461" target="_blank" rel="noopener">Reparatursatz Buchsen/Bolzen Löffelaufnahme Takeuchi TB145/TB250</a></div>
+      <div class="karte-preis">699 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/fahrantrieb-fahrmotor-fuer-takeuchi-tb145-minibagger-bagger-neu-/2494044316-276-3744" target="_blank" rel="noopener">Fahrantrieb Fahrmotor für TAKEUCHI TB145 Minibagger Bagger neu!</a></div>
+      <div class="karte-preis">1.949 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 99092 Erfurt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/tragrolle-stuetzrolle-0391200100-takeuchi-tb045-tb145-tb250/2883277905-276-7461" target="_blank" rel="noopener">Tragrolle, Stützrolle, 0391200100, Takeuchi TB045,TB145,TB250</a></div>
+      <div class="karte-preis">129 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/gummikette-baggerkette-400x72-5x74n-fuer-takeuchi-tb145-tb153fr/1583142890-276-3744" target="_blank" rel="noopener">Gummikette Baggerkette 400x72,5x74N für Takeuchi TB145,TB153FR</a></div>
+      <div class="karte-preis">954 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 99092 Erfurt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/2x-gummikette-takeuchi-tb045-tb145-tb153-tb250-tb53/2727691031-276-7393" target="_blank" rel="noopener">2x Gummikette Takeuchi TB045 TB145 TB153 TB250 TB53</a></div>
+      <div class="karte-preis">1.695 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 92718 Schirmitz</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/1-gummikette-400x72-5x74n-takeuchi-tb045-tb145-etc-/2353438631-276-8431" target="_blank" rel="noopener">1 Gummikette 400x72,5x74N TAKEUCHI TB045,TB145, etc.</a></div>
+      <div class="karte-preis">988 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 75443 Ötisheim</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/2-stueck-gummiketten-400x72-5x74-n-takeuchi-tb045-tb145-etc-/1672267446-276-8431" target="_blank" rel="noopener">2 Stück Gummiketten 400x72,5x74 N TAKEUCHI TB045,TB145, etc.</a></div>
+      <div class="karte-preis">1.996 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 75443 Ötisheim</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-145-153/3452941804-276-2026" target="_blank" rel="noopener">Takeuchi TB 145 / 153</a></div>
+      <div class="karte-preis">21.301 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 59069 Hamm</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb145/3444095496-239-3192" target="_blank" rel="noopener">Takeuchi TB145</a></div>
+      <div class="karte-preis">15.500 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 30459 Ricklingen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-145-125-kabine/3380283795-276-7583" target="_blank" rel="noopener">Takeuchi TB 145 125 Kabine</a></div>
+      <div class="karte-preis">160 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 83083 Riedering</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-145-245/3177701697-223-7631" target="_blank" rel="noopener">Takeuchi TB 145 - 245</a></div>
+      <div class="karte-preis">1 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 87487 Wiggensbach</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/tragrolle-stuetzrolle-0561204080-takeuchi-tb175-nachbau-neu/2697655481-276-7461" target="_blank" rel="noopener">Tragrolle, Stützrolle, 0561204080, Takeuchi TB175, Nachbau NEU</a></div>
+      <div class="karte-preis">177 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/fahrantrieb-fahrmotor-endantrieb-kettenantrieb-takeuchi-tb175/958920600-276-6830" target="_blank" rel="noopener">Fahrantrieb, Fahrmotor, Endantrieb, Kettenantrieb Takeuchi TB175</a></div>
+      <div class="karte-preis">2.149 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 90425 Nordstadt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/tragrolle-stuetzrolle-0561204080-takeuchi-bagger-tb175-nachbau/2878185583-276-7461" target="_blank" rel="noopener">Tragrolle, Stützrolle, 0561204080, Takeuchi Bagger TB175, Nachbau</a></div>
+      <div class="karte-preis">177 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-175w-achse/3360913539-276-1681" target="_blank" rel="noopener">Takeuchi TB 175W Achse</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 53937 Schleiden</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-175-minibagger-bagger/3415133246-276-7988" target="_blank" rel="noopener">Takeuchi TB 175 Minibagger Bagger</a></div>
+      <div class="karte-preis">27.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 72124 Pliezhausen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/loeffelbolzen-nr-0011595001-orginal-takeuchi-tb-175-tb-290-neu/2774063066-276-7461" target="_blank" rel="noopener">Löffelbolzen Nr. 0011595001 Orginal Takeuchi TB 175/ TB 290 NEU</a></div>
+      <div class="karte-preis">79 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb175-minibagger-kettenbagger-nettopreis-22500-/2983563737-276-1178" target="_blank" rel="noopener">Takeuchi TB175 Minibagger, Kettenbagger * Nettopreis 22500€</a></div>
+      <div class="karte-preis">26.755 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48619 Heek</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/laufrolle-05613-04100-takeuchi-tb-175-tb-070-neu-0561404100/3437519249-276-7461" target="_blank" rel="noopener">Laufrolle 05613-04100 Takeuchi TB 175/ TB 070 Neu, 0561404100</a></div>
+      <div class="karte-preis">178 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/gummikette-baggerkette-450x81x76w-f-takeuchi-tb175-tb290/2233333536-276-3744" target="_blank" rel="noopener">Gummikette Baggerkette 450x81x76W f. Takeuchi TB175, TB290</a></div>
+      <div class="karte-preis">1.273 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 99092 Erfurt</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb175-hydraulikpumpe-rep-ueberholsatz-fuer-19020-17500/2587212261-276-23408" target="_blank" rel="noopener">Takeuchi TB175 Hydraulikpumpe Rep- Überholsatz für 19020-17500</a></div>
+      <div class="karte-preis">1.226 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 54558 Mückeln</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/gummikette-450x81x76-takeuchi-tb175-tb290-netto-1100/2345955772-276-8086" target="_blank" rel="noopener">Gummikette 450x81x76 Takeuchi TB175 TB290 netto €1100</a></div>
+      <div class="karte-preis">1.309 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 88353 Kißlegg</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb175-zahnradpumpe-oem-shimadzu-19020-17600/2587234874-276-23408" target="_blank" rel="noopener">Takeuchi TB175 Zahnradpumpe OEM Shimadzu 19020-17600</a></div>
+      <div class="karte-preis">1.071 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 54558 Mückeln</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb-175-zylinder/3484063341-276-7622" target="_blank" rel="noopener">takeuchi tb 175 Zylinder</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 87448 Waltenhofen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/hydraulikpumpe-takeuchi-tb175w-1902018500-1902018600/2505252390-276-9243" target="_blank" rel="noopener">Hydraulikpumpe Takeuchi TB175W 1902018500 + 1902018600</a></div>
+      <div class="karte-preis">6.854 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 74182 Obersulm</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/takeuchi-tb175-tb080-hydraulikpumpe-k3sp36c-kpm-1902024200/2686403385-276-23408" target="_blank" rel="noopener">Takeuchi TB175 TB080 Hydraulikpumpe K3SP36C KPM 1902024200</a></div>
+      <div class="karte-preis">VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 54558 Mückeln</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/leitrad-fuer-takeuchi-bagger-tb-175-tb-070-0561400600-nachbau/2684967826-276-7461" target="_blank" rel="noopener">Leitrad für Takeuchi Bagger TB 175/ TB 070, 0561400600 Nachbau</a></div>
+      <div class="karte-preis">559 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 94154 Neukirchen vorm Wald</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/schnellwechsler-hs08-neu-fuer-takeuchi-tb175-tb290-tb070-ms08-sw08/2196100194-276-1306" target="_blank" rel="noopener">Schnellwechsler HS08 NEU für Takeuchi TB175 TB290 TB070 MS08 SW08</a></div>
+      <div class="karte-preis">2.499 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 48351 Everswinkel</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/minibagger-takeuchi-tb175-mit-hs08-ms08-hydraulisch-hammerleitung/2064259156-276-2013" target="_blank" rel="noopener">Minibagger Takeuchi TB175 mit HS08 MS08 hydraulisch Hammerleitung</a></div>
+      <div class="karte-preis">47.481 € VB</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 58099 Hagen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/radsatz-breitreifen-mobilbagger-500-45r20-terex-tw85-tw75-tw70-schaeff-hml32-hml23-b95w-tw95-radlader-wacker-neuson-kramer-weidemann-takeuchi-tb175w-reifen-raeder-komplettradsatz-500-45-20-ballonreifen/2837386197-276-9145" target="_blank" rel="noopener">Radsatz Breitreifen Mobilbagger 500/45R20 Terex TW85 TW75 TW70 Schaeff HML32 HML23 B95W TW95 Radlader Wacker Neuson Kramer Weidemann Takeuchi TB175W Reifen Räder Komplettradsatz 500/45-20 Ballonreifen</a></div>
+      <div class="karte-preis">5.473 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 91631 Wettringen</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.kleinanzeigen.de/s-anzeige/2x-gummikette-takeuchi-tb070-tb175-tb180-tb280-tb285-tb290-tb80/2655352469-276-7393" target="_blank" rel="noopener">2x Gummikette Takeuchi TB070 TB175 TB180 TB280 TB285 TB290 TB80</a></div>
+      <div class="karte-preis">2.135 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 92718 Schirmitz</span>
+        <span class="meta-chip">eBay Kleinanzeigen</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://www.maschinensucher.de/takeuchi-tb+175+mit+klima+%2B+powertilt+%2B+hydr.+schnellw.+%2B+3/i-22465772" target="_blank" rel="noopener">Minibagger Takeuchi TB 175 mit Klima + Powertilt + hydr. Schnellw. + 3</a></div>
+      <div class="karte-preis">28.999 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Gnas</span>
+        <span class="meta-chip">Maschinensucher</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://de.machinerypark.com/ersatzteile-endantriebe-fahrmotoren/takeuchi-tb175-e1903120800-finale-drive-neu-ckhs5038eq" target="_blank" rel="noopener">Takeuchi TB175 E1903120800 Finale Drive</a></div>
+      <div class="karte-preis">auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 84547 Emmerting, Deutschland</span>
+        <span class="meta-chip">Machinerypark</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Gummiketten/Bagger/400h72-5h74N--23081810222749424100" target="_blank" rel="noopener">400h72,5h74N Gummikette für Kobelco KOBELCO B 69, KOBELCO SK 042, KOBELCO SK 042-1, KOBELCO SK 045, KOBELCO SK 045 Coupe, KOBELCO SK 045-1, KOBELCO SK 045-2, KOBELCO SK 050 KOMATSU PC 50 FR-2, 2-type, KOMATSU PC 50 MR-2, TAKEUCHI TB 045, 1-type, TAKEUCHI TB 045, 2-type, TAKEUCHI TB 145, TAKEUCHI TB 53 FR. Bagger</a></div>
+      <div class="karte-preis">805,80 € 41.700 UAH</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Ukraine, m. Vishneve</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24082103001298973800" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Baumaschinen/Role-de-rulare-pentru--26030709440175844600" target="_blank" rel="noopener">Walzen für Laufrolle für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Minibagger--24082020164196542400" target="_blank" rel="noopener">Laufrolle für Takeuchi TB145  Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24082103010747642800" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Fahrantriebe/Minibagger--24082100540984038600" target="_blank" rel="noopener">Fahrantrieb für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Takeuchi--23121904323218986500" target="_blank" rel="noopener">Takeuchi Vorsteuergerät für TB145</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24081506211864757100" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenrader/Baumaschinen/Stea-Sprocket-pentru-Miniexcavator-Takeuchi-TB138FR-TB145--24081501483093709400" target="_blank" rel="noopener">Stea Sprocket pentru Miniexcavator Takeuchi TB138FR / TB145 Kettenrad für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Baumaschinen/Role-de-rulare--26022412281672648200" target="_blank" rel="noopener">Laufwalzen Laufrolle für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Gummiketten/Baumaschinen/senila-pentru-Takeuchi-TB145-400-x-725-x-74--26022407013785738200" target="_blank" rel="noopener">Șenilă pentru Takeuchi TB145 (400 x 725 x 74) Gummikette für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Rola-intinzatoare-senila-pentru-excavatoare--26022406241964550400" target="_blank" rel="noopener">Kettenlaufwerksrolle für Bagger Leitrad für Takeuchi TB125 TB135 TB138 TB14 TB145 TB15 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Roata-de-ghidaj-Idler-pentru-Takeuchi-TB145TB153FR--26022405015682172700" target="_blank" rel="noopener">Spannrolle für Takeuchi TB145/TB153FR Leitrad für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Rola-intinzatoare-pentru--26022404042804590100" target="_blank" rel="noopener">Spannrolle für Leitrad für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenrader/Baumaschinen/Steluta-Sprocket--26022402060097444200" target="_blank" rel="noopener">Kettenrad für Takeuchi TB145 11 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Minibagger/Takeuchi/TB175--22102014482246019200" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Portugal, Vila Franca de Xira</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Mobilbagger/Takeuchi/TB175-W-for-parts--21051315230681711400" target="_blank" rel="noopener">Takeuchi TB175 W (for parts)</a></div>
+      <div class="karte-preis">100 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien, Maramures</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26052511011662496900" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">22.050 € 95.000 PLN</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Polen, Bonikowo</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26052511062687305600" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">16.710 € 72.000 PLN</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Polen, Bonikowo</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenbagger/Takeuchi/TB175--24061912114560200700" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Minibagger/Takeuchi/TB-175--24061912112280781900" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Mobilbagger/Takeuchi/TB175W-3-Buckets--26071317560964309400" target="_blank" rel="noopener">Takeuchi TB175W 3 Buckets!</a></div>
+      <div class="karte-preis">26.500 € Ohne MwSt.</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederlande, Almelo</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/7t-TB175-powertilt--25031800421296819400" target="_blank" rel="noopener">Takeuchi 7t TB175 powertilt</a></div>
+      <div class="karte-preis">26.950 € 650.000 CZK</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Tschechien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Versteigerung/Mobilbagger/Takeuchi/TB175W--26070815114554459600" target="_blank" rel="noopener">Takeuchi TB175W</a></div>
+      <div class="karte-preis">Versteigerung</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien, Ocana River</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26062318425020045800" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">24.900 € Ohne MwSt.</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Slowenien, Gomilsko</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--25092614513273096200" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">21.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Miete/Midibagger/Takeuchi/TB175--26040115231612940300" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">34.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien, Hunedoara</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Miete/Minibagger/Takeuchi/TB-175--20100617334138699700" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Österreich, Deutsch Goritz</span>
+        <span class="meta-chip">Machineryline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Gummiketten/Bagger/400h72-5h74N--23081810222749424100" target="_blank" rel="noopener">400h72,5h74N Gummikette für Kobelco KOBELCO B 69, KOBELCO SK 042, KOBELCO SK 042-1, KOBELCO SK 045, KOBELCO SK 045 Coupe, KOBELCO SK 045-1, KOBELCO SK 045-2, KOBELCO SK 050 KOMATSU PC 50 FR-2, 2-type, KOMATSU PC 50 MR-2, TAKEUCHI TB 045, 1-type, TAKEUCHI TB 045, 2-type, TAKEUCHI TB 145, TAKEUCHI TB 53 FR. Bagger</a></div>
+      <div class="karte-preis">805,80 € 41.700 UAH</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Ukraine, m. Vishneve</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24082103001298973800" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Baumaschinen/Role-de-rulare-pentru--26030709440175844600" target="_blank" rel="noopener">Walzen für Laufrolle für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Minibagger--24082020164196542400" target="_blank" rel="noopener">Laufrolle für Takeuchi TB145  Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24082103010747642800" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Fahrantriebe/Minibagger--24082100540984038600" target="_blank" rel="noopener">Fahrantrieb für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Takeuchi--23121904323218986500" target="_blank" rel="noopener">Takeuchi Vorsteuergerät für TB145</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Vorsteuergerate/Minibagger--24081506211864757100" target="_blank" rel="noopener">Vorsteuergerät für Takeuchi TB145 Minibagger</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenrader/Baumaschinen/Stea-Sprocket-pentru-Miniexcavator-Takeuchi-TB138FR-TB145--24081501483093709400" target="_blank" rel="noopener">Stea Sprocket pentru Miniexcavator Takeuchi TB138FR / TB145 Kettenrad für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Laufrollen/Baumaschinen/Role-de-rulare--26022412281672648200" target="_blank" rel="noopener">Laufwalzen Laufrolle für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Gummiketten/Baumaschinen/senila-pentru-Takeuchi-TB145-400-x-725-x-74--26022407013785738200" target="_blank" rel="noopener">Șenilă pentru Takeuchi TB145 (400 x 725 x 74) Gummikette für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Rola-intinzatoare-senila-pentru-excavatoare--26022406241964550400" target="_blank" rel="noopener">Kettenlaufwerksrolle für Bagger Leitrad für Takeuchi TB125 TB135 TB138 TB14 TB145 TB15 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Roata-de-ghidaj-Idler-pentru-Takeuchi-TB145TB153FR--26022405015682172700" target="_blank" rel="noopener">Spannrolle für Takeuchi TB145/TB153FR Leitrad für Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Leitrader/Baumaschinen/Rola-intinzatoare-pentru--26022404042804590100" target="_blank" rel="noopener">Spannrolle für Leitrad für Takeuchi TB145 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenrader/Baumaschinen/Steluta-Sprocket--26022402060097444200" target="_blank" rel="noopener">Kettenrad für Takeuchi TB145 11 Baumaschinen</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 145</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Minibagger/Takeuchi/TB175--22102014482246019200" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Portugal, Vila Franca de Xira</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Mobilbagger/Takeuchi/TB175-W-for-parts--21051315230681711400" target="_blank" rel="noopener">Takeuchi TB175 W (for parts)</a></div>
+      <div class="karte-preis">100 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien, Maramures</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26052511011662496900" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">22.060 € 95.000 PLN</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Polen, Bonikowo</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26052511062687305600" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">16.720 € 72.000 PLN</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Polen, Bonikowo</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Kettenbagger/Takeuchi/TB175--24061912114560200700" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Minibagger/Takeuchi/TB-175--24061912112280781900" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Mobilbagger/Takeuchi/TB175W-3-Buckets--26071317560964309400" target="_blank" rel="noopener">Takeuchi TB175W 3 Buckets!</a></div>
+      <div class="karte-preis">26.500 € Ohne MwSt.</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Niederlande, Almelo</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/7t-TB175-powertilt--25031800421296819400" target="_blank" rel="noopener">Takeuchi 7t TB175 powertilt</a></div>
+      <div class="karte-preis">26.860 € 650.000 CZK</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Tschechien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Versteigerung/Mobilbagger/Takeuchi/TB175W--26070815114554459600" target="_blank" rel="noopener">Takeuchi TB175W</a></div>
+      <div class="karte-preis">Versteigerung</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Spanien, Ocana River</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--26062318425020045800" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">24.900 € Ohne MwSt.</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Slowenien, Gomilsko</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Verkauf/Midibagger/Takeuchi/TB175--25092614513273096200" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">21.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Miete/Midibagger/Takeuchi/TB175--26040115231612940300" target="_blank" rel="noopener">Takeuchi TB175</a></div>
+      <div class="karte-preis">34.000 €</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Rumänien, Hunedoara</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-titel"><a href="https://machineryline.de/-/Miete/Minibagger/Takeuchi/TB-175--20100617334138699700" target="_blank" rel="noopener">Takeuchi TB 175</a></div>
+      <div class="karte-preis">Preis auf Anfrage</div>
+      <div class="karte-meta">
+        <span class="meta-chip">📍 Österreich, Deutsch Goritz</span>
+        <span class="meta-chip">Autoline</span>
+        <span class="meta-chip">Takeuchi TB 175</span>
+      </div>
+    </div></div>
+      </div>
+    </div>
+  <footer>Komplette Historie in <a href="https://github.com/Patrick8-75/Suchmaschine/blob/main/treffer.csv" target="_blank" rel="noopener">treffer.csv</a> auf GitHub.</footer>
+</div>

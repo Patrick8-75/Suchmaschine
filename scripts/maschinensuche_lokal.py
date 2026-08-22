@@ -238,6 +238,30 @@ def gehoert_zu_ausschluss(titel: str, ausschluesse: list[str]) -> bool:
     return any(wort.lower() in titel_klein for wort in ausschluesse)
 
 
+# Erkennungswörter für Ersatz-/Verschleißteile statt kompletter Maschinen (Nutzerwunsch
+# 22.08.2026: "Ersatzteile oder Verschleissteile nicht anzeigen oder suchen, nur komplette
+# Maschine!"). Bewusst mehrteilige/eindeutige Begriffe, damit z.B. "Kettenbagger" nicht wegen
+# "Kette" fälschlich rausfliegt, und KEINE Begriffe wie "Schneidwerk"/"Pflücker"/"Vorsatz", die
+# selbst komplette, gesuchte Anbaugeräte bezeichnen (z.B. Claas Conspeed/Geringhoff sind
+# Erntevorsätze - die sollen ja gerade gefunden werden).
+ERSATZTEIL_BEGRIFFE = [
+    "ersatzteil", "verschleißteil", "verschleissteil", "gummikette", "laufrolle", "tragrolle",
+    "stützrolle", "spannrolle", "leitrad", "kettenrad", "antriebsrad", "fahrantrieb", "fahrmotor",
+    "endantrieb", "finale drive", "hydraulikpumpe", "zahnradpumpe", "vorsteuergerät", "türschloss",
+    "türverriegelung", "türe kpl", "sitzpolster", "sitzkissen", "löffelbolzen", "reparatursatz",
+    "for parts", "radsatz", "breitreifen", "schnellwechsler", "kettenlaufwerksrolle",
+    "buchsen/bolzen", "roata de ghidaj", "rola intinzatoare", "role de rulare", "senila pentru",
+    "kettenlaufrolle", "winkelgetriebe", "getriebe", "pflückeinheit", "häckslerarm",
+    "keilriemen", "zahnriemen", "dichtung", "bremsbelag", "kupplung", "hydraulikschlauch",
+    "achse", "verschleißteile", "verschleissteile", "häckslermesser", "lagermaisschnecke",
+]
+
+
+def ist_ersatzteil(titel: str) -> bool:
+    titel_klein = titel.lower()
+    return any(begriff in titel_klein for begriff in ERSATZTEIL_BEGRIFFE)
+
+
 def normalisiere_fuer_abgleich(text: str) -> str:
     """Buchstabe+Zahl-Grenzen mit Leerzeichen/Bindestrich dazwischen zusammenziehen,
     damit z.B. 'TB 145' und 'TB145' beim Abgleich als gleich gelten."""
@@ -274,6 +298,8 @@ def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], aus
         if not passt_wirklich_zum_suchbegriff(t["titel"], suchbegriff):
             continue
         if gehoert_zu_ausschluss(t["titel"], ausschluesse):
+            continue
+        if ist_ersatzteil(t["titel"]):
             continue
         if t["id"] in gesehen:
             continue

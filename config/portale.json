@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal komplett ab. 'gruppen' schränkt ein, für welche Suchbegriff-Gruppen (siehe config/suchbegriffe.json) das Portal mitsucht - leer/fehlend = für alle Gruppen. Status Stand 22.08.2026 (echte Tests mit Python/requests durchgeführt, siehe 'hinweis' je Portal).",
+  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal ab, ohne es zu löschen. 'gruppen' schränkt ein, für welche Suchbegriff-Gruppen (siehe config/suchbegriffe.json) das Portal mitsucht - leer/fehlend = für alle Gruppen. Nur Portale, die technisch tatsächlich durchsuchbar sind, stehen hier drin - nicht durchsuchbare (Captcha-Schutz, aktive Bot-Erkennung, reine JavaScript-Suche, keine passende Kategorie) sind im README unter 'Geprüfte, aber nicht nutzbare Portale' dokumentiert und werden hier wieder aufgenommen, sobald sie durchsuchbar werden. Status Stand 22.08.2026.",
   "portale": [
     {
       "name": "eBay Kleinanzeigen",
@@ -13,98 +13,28 @@
       "basis_url": "https://www.maschinensucher.de",
       "aktiv": true,
       "gruppen": ["Baumaschine"],
-      "hinweis": "Auf Nutzerwunsch (22.08.2026) auf die Gruppe 'Baumaschine' beschränkt reaktiviert - dediziertes Baumaschinenportal, für Landmaschinen (Claas Conspeed/Geringhoff) nicht relevant genug. Funktioniert zuverlässig: server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz. Echte Takeuchi-TB145/TB175-Treffer bestätigt."
+      "hinweis": "Auf die Gruppe 'Baumaschine' beschränkt - dediziertes Baumaschinenportal, für Landmaschinen (Claas Conspeed/Geringhoff) nicht relevant genug. Funktioniert zuverlässig: server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz. Echte Takeuchi-TB145/TB175-Treffer bestätigt."
     },
     {
       "name": "Machinerypark",
       "basis_url": "https://de.machinerypark.com",
       "aktiv": true,
       "gruppen": ["Baumaschine"],
-      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Funktioniert zuverlässig: GET /suchen?search=<begriff>&result=true liefert echte, gefilterte Treffer mit Preis/Ort/Baujahr. Kein Bot-Schutz festgestellt."
+      "hinweis": "Funktioniert zuverlässig: GET /suchen?search=<begriff>&result=true liefert echte, gefilterte Treffer mit Preis/Ort/Baujahr. Kein Bot-Schutz festgestellt."
     },
     {
       "name": "Machineryline",
       "basis_url": "https://machineryline.de",
       "aktiv": true,
       "gruppen": ["Baumaschine"],
-      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Internationale Maschinenbörse, GET /search_text.php?query=<begriff> liefert echte Treffer (auch aus dem Ausland). Kein Bot-Schutz festgestellt."
+      "hinweis": "Internationale Maschinenbörse, GET /search_text.php?query=<begriff> liefert echte Treffer (auch aus dem Ausland). Kein Bot-Schutz festgestellt."
     },
     {
       "name": "Autoline",
       "basis_url": "https://autoline.de",
       "aktiv": false,
       "gruppen": ["Baumaschine"],
-      "hinweis": "Deaktiviert (22.08.2026, Nutzerentscheidung): läuft auf derselben Plattform wie Machineryline, 19 von 28 Treffern waren im Test identisch - würde nur Duplikate erzeugen. Technisch funktionsfähig, GET /search_text.php?query=<begriff>."
-    },
-    {
-      "name": "MachineryZone",
-      "basis_url": "https://www.machineryzone.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "NICHT automatisierbar: DataDome-Captcha (geo.captcha-delivery.com), gleiche Unternehmensgruppe wie Agriaffaires/Baupool. Manuell im Browser weiter durchsuchbar."
-    },
-    {
-      "name": "mobile.de",
-      "basis_url": "https://www.mobile.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "NICHT automatisierbar: blockt Skript-Zugriffe explizit mit 'Access denied' (403). Manuell im Browser weiter durchsuchbar."
-    },
-    {
-      "name": "Baupool",
-      "basis_url": "https://www.baupool.com",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "NICHT automatisierbar: DataDome-Captcha, gleiche Unternehmensgruppe wie Agriaffaires/MachineryZone. baupool.de existiert nicht (falscher Domain-Vorschlag), echte Domain ist baupool.com."
-    },
-    {
-      "name": "AutoScout24",
-      "basis_url": "https://www.autoscout24.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "Nicht relevant: reine PKW-Plattform, keine Baumaschinen-/Bagger-Kategorie vorhanden."
-    },
-    {
-      "name": "Agriaffaires",
-      "basis_url": "https://www.agriaffaires.de",
-      "aktiv": false,
-      "gruppen": ["Landmaschine"],
-      "hinweis": "NICHT automatisierbar: Seite ist durch DataDome-Captcha geschützt (geo.captcha-delivery.com). Automatisiertes Umgehen von Bot-/Captcha-Schutz ist nicht zulässig. Manuell im Browser weiter durchsuchbar."
-    },
-    {
-      "name": "Technikbörse",
-      "basis_url": "https://www.technikboerse.com",
-      "aktiv": false,
-      "gruppen": ["Landmaschine", "Baumaschine"],
-      "hinweis": "NICHT automatisierbar: Suchanfrage per Skript wird explizit als 'User-Agent spoofing detected' geblockt (aktive Bot-Erkennung). Manuell im Browser weiter durchsuchbar; hat auch einen eigenen 'Suchauftrag' (setzt Konto voraus, daher hier nicht genutzt)."
-    },
-    {
-      "name": "Landwirt.com",
-      "basis_url": "https://www.landwirt.com",
-      "aktiv": false,
-      "gruppen": ["Landmaschine"],
-      "hinweis": "Aktuell nicht unterstützt: Die Kleinanzeigen-Suche läuft clientseitig (JavaScript) - ein einfacher HTTP-Abruf liefert nur die ungefilterte allgemeine Anzeigenliste, keine echten Suchtreffer. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
-    },
-    {
-      "name": "Mascus",
-      "basis_url": "https://www.mascus.de",
-      "aktiv": false,
-      "gruppen": ["Landmaschine", "Baumaschine"],
-      "hinweis": "Aktuell nicht unterstützt: Suchergebnisse werden clientseitig (JavaScript) nachgeladen, im per HTTP abgerufenen HTML sind keine Anzeigen enthalten. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
-    },
-    {
-      "name": "Die Baumaschinen Börse (DBMB)",
-      "basis_url": "https://die-baumaschinen-boerse.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "Technisch erreichbar (kein Bot-Schutz), aber die Suche läuft nur über eine feste Hersteller-Dropdown-Liste ohne freien Suchbegriff - Takeuchi steht dort nicht einmal zur Auswahl. Für unsere Suchbegriffe nicht nutzbar."
-    },
-    {
-      "name": "Baggerboerse.de (Zeppelin)",
-      "basis_url": "https://baggerboerse.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "Kein Kauf-Marktplatz, sondern ein Ankauf-/Bewertungstool von Zeppelin (Verkaufsformular für eigene Maschinen) - enthält keine durchsuchbaren Angebote. Für unseren Zweck nicht geeignet."
+      "hinweis": "Deaktiviert (Nutzerentscheidung, nicht wegen technischer Probleme): läuft auf derselben Plattform wie Machineryline, 19 von 28 Treffern waren im Test identisch - würde nur Duplikate erzeugen. Technisch funktionsfähig, GET /search_text.php?query=<begriff> - bei Bedarf jederzeit mit 'aktiv': true reaktivierbar."
     }
   ]
 }

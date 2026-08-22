@@ -1,9 +1,17 @@
 # Maschinensuche P.Urny Handel
 
 Durchsucht mehrmals täglich automatisch mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu
-den in `config/suchbegriffe.json` hinterlegten Maschinentypen und trägt neue Treffer in
-`treffer.csv` ein. Läuft **lokal auf diesem Rechner** über die Windows-Aufgabenplanung (siehe
-"Hintergrund" unten für den Grund).
+den in `config/suchbegriffe.json` hinterlegten Maschinentypen. Bei neuen Treffern wird
+1. `treffer.csv` ergänzt (komplette Historie, nie gelöscht),
+2. eine E-Mail an info@urny-handel.com verschickt,
+3. das Artifact **[Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
+4. eine Push-Benachrichtigung an Patrick geschickt.
+
+Läuft **lokal auf diesem Rechner** (siehe "Hintergrund" unten für den Grund) über eine
+**geplante Claude-Code-Aufgabe** namens `maschinensuche-radar` (alle 2h, 7-21 Uhr) - keine
+Windows-Aufgabenplanung mehr nötig. Einzige Voraussetzung: **die Claude-Code-App muss offen
+sein**, damit die Aufgabe pünktlich feuert (ist die App zu, holt sie den Lauf beim nächsten
+Start nach).
 
 ## Einmaliges Setup
 
@@ -19,42 +27,70 @@ den in `config/suchbegriffe.json` hinterlegten Maschinentypen und trägt neue Tr
 3. Testlauf von Hand:
    ```
    python scripts/maschinensuche_lokal.py
-   ```
-4. Windows-Aufgabenplanung einrichten (läuft danach automatisch, mehrmals täglich):
-   ```
-   powershell -ExecutionPolicy Bypass -File register_task.ps1
+   python scripts/render_radar.py
    ```
 
-Der PC muss zu den geplanten Zeiten eingeschaltet/angemeldet sein, damit der Lauf startet.
+Die geplante Aufgabe `maschinensuche-radar` ist bereits eingerichtet (in Claude Code unter
+"Scheduled" sichtbar) und braucht keine weitere Einrichtung.
 
 ## Wie du Maschinentypen änderst
 
 Öffne [`config/suchbegriffe.json`](config/suchbegriffe.json) und passe die Liste `suchbegriffe`
-an - eine Zeile pro Begriff, aktuell `"Claas Conspeed"` und `"Geringhoff"`. Wörter unter
-`ausschluesse.global` sortieren offensichtliche Fehltreffer (Spielzeug, Ersatzteile usw.) aus.
-Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern, der nächste
-geplante Lauf verwendet automatisch die neue Liste.
+an - ein Eintrag pro Begriff mit `begriff` (Suchtext), `gruppe` (`Landmaschine` oder
+`Baumaschine` - steuert, welche Portale mitsuchen) und `beschreibung` (Maschinentyp, wird als
+Überschrift im Radar verwendet). Wörter unter `ausschluesse.global` sortieren zusätzliche
+Fehltreffer aus. Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern,
+der nächste geplante Lauf verwendet automatisch die neue Liste.
+
+**Ersatzteile werden grundsätzlich nicht gemeldet** (Nutzerentscheidung) - `ist_ersatzteil()` in
+`scripts/maschinensuche_lokal.py` erkennt gängige Ersatzteil-Bezeichnungen (Gummikette,
+Laufrolle, Hydraulikpumpe, Fahrantrieb usw.) und filtert sie schon beim Suchlauf raus, bevor sie
+in `treffer.csv` landen.
 
 ## Portale - aktueller Stand
 
-Siehe [`config/portale.json`](config/portale.json) für Details je Portal. Kurzfassung:
+Siehe [`config/portale.json`](config/portale.json) für Details je Portal. Dort stehen nur
+Portale, die tatsächlich durchsuchbar sind:
 
-| Portal | Status | Grund |
+| Portal | Status | Gruppe | Grund |
+|---|---|---|---|
+| eBay Kleinanzeigen | ✅ aktiv | alle | funktioniert zuverlässig |
+| Maschinensucher | ✅ aktiv | Baumaschine | funktioniert zuverlässig (eher Baumaschinen-Fokus) |
+| Machinerypark | ✅ aktiv | Baumaschine | funktioniert zuverlässig |
+| Machineryline | ✅ aktiv | Baumaschine | funktioniert zuverlässig, international |
+| Autoline | ⏸️ inaktiv | Baumaschine | technisch OK, aber Duplikate von Machineryline - Nutzerentscheidung, kein technisches Problem |
+
+### Geprüfte, aber nicht nutzbare Portale
+
+Diese Portale wurden getestet und bewusst **komplett aus `config/portale.json` entfernt**
+(nicht nur deaktiviert), weil sie sich mit einfachen HTTP-Anfragen nicht durchsuchen lassen.
+Falls sich das je ändert (z.B. ein Portal öffnet eine offizielle API, oder wir rüsten auf einen
+Headless-Browser um), können sie mit den hier notierten Details wieder in `portale.json`
+aufgenommen werden:
+
+| Portal | Grund | Kategorie des Problems |
 |---|---|---|
-| eBay Kleinanzeigen | ✅ aktiv | funktioniert zuverlässig |
-| Maschinensucher | ✅ aktiv | funktioniert zuverlässig (eher Baumaschinen-Fokus) |
-| Agriaffaires | ❌ inaktiv | Captcha-/Bot-Schutz (DataDome) - nicht automatisierbar |
-| Technikbörse | ❌ inaktiv | aktive Bot-Erkennung blockt Skript-Zugriffe |
-| Landwirt.com | ❌ inaktiv | Suche läuft nur per JavaScript, HTTP-Abruf liefert keine echten Treffer |
-| Mascus | ❌ inaktiv | Suche läuft nur per JavaScript, HTTP-Abruf liefert keine echten Treffer |
+| Agriaffaires (agriaffaires.de) | DataDome-Captcha (geo.captcha-delivery.com) | Bot-Schutz |
+| Technikbörse (technikboerse.com) | Explizite Meldung "User-Agent spoofing detected" | Bot-Schutz |
+| MachineryZone (machineryzone.de) | DataDome-Captcha (gleiche Unternehmensgruppe wie Agriaffaires) | Bot-Schutz |
+| Baupool (baupool.com, nicht .de) | DataDome-Captcha (gleiche Unternehmensgruppe) | Bot-Schutz |
+| mobile.de | Blockt Skript-Zugriffe explizit mit "Access denied" (403) | Bot-Schutz |
+| Landwirt.com | `/kleinanzeigen?q=` wird serverseitig ignoriert, echte Suche läuft nur per JavaScript | Nur JS-Suche |
+| Mascus (mascus.de) | Suchergebnisse werden clientseitig nachgeladen, kein HTML-Inhalt beim Abruf | Nur JS-Suche |
+| Die Baumaschinen Börse (die-baumaschinen-boerse.de) | Suche nur über feste Hersteller-Dropdown, Takeuchi nicht gelistet | Keine passende Suche |
+| Baggerboerse.de (Zeppelin) | Kein Kauf-Marktplatz, sondern Ankaufs-/Bewertungsformular | Kein Marktplatz |
+| AutoScout24 | Reine PKW-Plattform, keine Baumaschinen-Kategorie | Nicht relevant |
 
-Landwirt.com und Mascus sind keine Bot-Schutz-Fälle, sondern reine JavaScript-Suchen - das lässt
-sich mit mehr Aufwand (z.B. per Headless-Browser) nachrüsten, siehe "Mögliche Erweiterungen".
+Bei "Nur JS-Suche" wäre ein Headless-Browser (z.B. Playwright) die Lösung, siehe
+"Mögliche Erweiterungen". Bei "Bot-Schutz" ist automatisiertes Umgehen nicht zulässig - dort
+bleibt nur die manuelle Suche im Browser.
 
 ## Ergebnisse ansehen
 
-`treffer.csv` in diesem Ordner öffnen (z.B. mit Excel) - neueste Einträge stehen unten.
-Zusätzlich kommt bei jedem Fund automatisch eine E-Mail an **info@urny-handel.com**.
+- **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639) - wird automatisch nach jedem Lauf aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h automatisch raus.
+- **Komplette Historie:** `treffer.csv` in diesem Ordner (z.B. mit Excel öffnen) - wird nie gelöscht.
+- **E-Mail:** bei jedem neuen Treffer automatisch an **info@urny-handel.com**.
+- **Push-Benachrichtigung:** bei jedem neuen Treffer, solange die Claude-Code-App läuft.
 
 ## Hintergrund: warum lokal statt Cloud?
 
