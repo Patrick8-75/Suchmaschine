@@ -254,13 +254,21 @@ ERSATZTEIL_BEGRIFFE = [
     "kettenlaufrolle", "winkelgetriebe", "getriebe", "pflückeinheit", "häckslerarm",
     "keilriemen", "zahnriemen", "dichtung", "bremsbelag", "kupplung", "hydraulikschlauch",
     "achse", "verschleißteile", "verschleissteile", "häckslermesser", "lagermaisschnecke",
-    "teile", "ersatzkette", "warntafel", "haube", "spitze", "adaption",
+    "teile", "ersatzkette", "warntafel", "haube", "spitze", "adaption", "pflückerkette",
 ]
+
+# "Kette"/"Ketten" als eigenständiges Wort (z.B. "Maispflücker Ketten 00...") ist ein
+# Ersatzteil - aber als Teil eines zusammengesetzten Worts wie "Kettenbagger" (komplette
+# Baumaschine!) nicht. \b matcht hier nicht innerhalb von Komposita ohne Leerzeichen davor,
+# daher reicht ein einfacher Wortgrenzen-Regex statt einer Ausnahmeliste.
+ERSATZTEIL_GANZWORT_REGEX = re.compile(r"\bketten?\b")
 
 
 def ist_ersatzteil(titel: str) -> bool:
     titel_klein = titel.lower()
-    return any(begriff in titel_klein for begriff in ERSATZTEIL_BEGRIFFE)
+    if any(begriff in titel_klein for begriff in ERSATZTEIL_BEGRIFFE):
+        return True
+    return bool(ERSATZTEIL_GANZWORT_REGEX.search(titel_klein))
 
 
 def normalisiere_fuer_abgleich(text: str) -> str:
