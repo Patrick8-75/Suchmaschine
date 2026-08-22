@@ -32,16 +32,35 @@ Technikbörse) werden bewusst NICHT genutzt, da diese ein Benutzerkonto vorausse
 
 ## Ergebnisse ansehen
 
-`treffer.csv` in diesem Repo öffnen (z.B. mit Excel) - neueste Einträge stehen unten. Aktuell gibt
-es noch **keinen E-Mail-/Chat-Versand** der neuen Treffer, da kein Benachrichtigungskanal
-eingerichtet ist (siehe Abschnitt "Offene Punkte").
+`treffer.csv` in diesem Repo öffnen (z.B. mit Excel) - neueste Einträge stehen unten. Zusätzlich
+kommt bei jedem Fund automatisch eine E-Mail (siehe nächster Abschnitt).
+
+## E-Mail-Benachrichtigung einrichten
+
+Sobald die Cloud-Routine neue Treffer in `treffer.csv` pusht, verschickt der GitHub-Actions-
+Workflow [`.github/workflows/email-benachrichtigung.yml`](.github/workflows/email-benachrichtigung.yml)
+automatisch eine E-Mail an **info@urny-handel.com** mit allen neuen Anzeigen (Titel, Preis, Ort,
+Datum, Link). Versendet wird über das Postfach **Microsoft 365 / Outlook** (smtp.office365.com).
+
+**Einmalig einzurichten (nur du, nicht Claude - Zugangsdaten gehören nicht in den Chat):**
+
+1. Auf github.com im Repo [Suchmaschine](https://github.com/Patrick8-75/Suchmaschine) zu
+   **Settings → Secrets and variables → Actions → New repository secret**
+2. Zwei Secrets anlegen:
+   - `SMTP_USERNAME` → deine vollständige Absender-E-Mail-Adresse (z.B. `info@urny-handel.com`)
+   - `SMTP_PASSWORD` → das Passwort dieses Postfachs. Falls Multi-Faktor-Authentifizierung aktiv
+     ist, brauchst du stattdessen ein **App-Passwort** (in Microsoft 365 unter
+     "Sicherheitsinfo" / "App-Passwörter" erstellbar - ggf. muss ein Admin das für den Tenant
+     freischalten).
+3. Fertig - kein weiterer Schritt nötig. Beim nächsten Fund testet sich der Versand von selbst;
+   bei Bedarf lässt sich der Workflow auch manuell unter dem Reiter "Actions" im Repo antriggern
+   (Push auf `treffer.csv` simulieren) um es vorher zu prüfen.
+
+Falls der Versand fehlschlägt (z.B. falsches Passwort, Tenant blockiert SMTP-Auth), zeigt der
+Actions-Tab im Repo den Fehler im Log an.
 
 ## Offene Punkte / mögliche Erweiterungen
 
-- **Benachrichtigung:** Aktuell landen neue Treffer nur in `treffer.csv` in diesem Repo. Für eine
-  automatische Benachrichtigung (E-Mail, Google Sheet o.ä.) müsste ein passender Connector unter
-  claude.ai/customize/connectors verbunden werden - dann kann die Routine entsprechend erweitert
-  werden.
 - **URL-Muster:** Für eBay Kleinanzeigen und Maschinensucher sind die Such-URLs bereits
   verifiziert (siehe `config/portale.json`). Bei Agriaffaires, Technikbörse, Landwirt.com und
   Mascus ermittelt die Routine die Such-URL bei jedem Lauf selbst über das Suchfeld der jeweiligen

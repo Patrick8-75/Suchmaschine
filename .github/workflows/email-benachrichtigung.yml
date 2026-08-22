@@ -1,0 +1,35 @@
+name: Neue-Treffer-Benachrichtigung
+
+# Läuft automatisch, sobald die Cloud-Routine neue Treffer in treffer.csv pusht.
+# Verschickt nur dann eine E-Mail, wenn der Push tatsächlich neue Zeilen an
+# treffer.csv angehängt hat.
+on:
+  push:
+    branches: [main]
+    paths:
+      - treffer.csv
+
+jobs:
+  benachrichtigen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Neue Treffer aus dem Diff ermitteln
+        id: diff
+        run: python3 scripts/neue_treffer_mail.py
+
+      - name: E-Mail versenden
+        if: steps.diff.outputs.count != '0'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "${{ steps.diff.outputs.count }} neue Maschinenangebote - P.Urny Handel"
+          to: info@urny-handel.com
+          from: "Maschinensuche P.Urny Handel <${{ secrets.SMTP_USERNAME }}>"
+          body: file://email_body.txt
