@@ -46,6 +46,21 @@ def lade_suchbegriff_infos() -> dict[str, dict]:
     }
 
 
+def lade_reihenfolge() -> tuple[dict, dict]:
+    """Reihenfolge, in der Hersteller und Typen in config/suchbegriffe.json auftauchen
+    (Nutzerwunsch: feste Reihenfolge statt nach Trefferanzahl sortiert, z.B. TB145,
+    TB175, TB230, TB250, TB260, TB290 von oben nach unten)."""
+    cfg = json.loads(CONFIG_SUCHBEGRIFFE.read_text(encoding="utf-8"))
+    hersteller_reihenfolge: dict[str, int] = {}
+    typ_reihenfolge: dict[tuple[str, str], int] = {}
+    for s in cfg["suchbegriffe"]:
+        hersteller = s.get("hersteller", s["begriff"])
+        typ = s.get("typ", s["begriff"])
+        hersteller_reihenfolge.setdefault(hersteller, len(hersteller_reihenfolge))
+        typ_reihenfolge.setdefault((hersteller, typ), len(typ_reihenfolge))
+    return hersteller_reihenfolge, typ_reihenfolge
+
+
 def lade_sichtbare_zeilen() -> tuple[list[dict], int]:
     with open(TREFFER_CSV, encoding="utf-8-sig", newline="") as f:
         alle = list(csv.DictReader(f))
@@ -104,7 +119,7 @@ def _anzahl(hersteller_dict_wert: dict) -> int:
     return sum(len(v) for v in hersteller_dict_wert.values())
 
 
-def render_gruppe(gruppe_name: str, beschreibungen: dict) -> str:
+def render_gruppe(gruppe_name: str, beschreibungen: dict, hersteller_reihenfolge: dict, typ_reihenfolge: dict) -> str:
     tag_klasse = GRUPPEN_TAG_KLASSE.get(gruppe_name, "bau")
     teile_html = []
     for beschreibung, hersteller_dict in sorted(
@@ -112,10 +127,14 @@ def render_gruppe(gruppe_name: str, beschreibungen: dict) -> str:
     ):
         gesamt = sum(_anzahl(v) for v in hersteller_dict.values())
         hersteller_html = []
-        for hersteller, typ_dict in sorted(hersteller_dict.items(), key=lambda kv: -_anzahl(kv[1])):
+        for hersteller, typ_dict in sorted(
+            hersteller_dict.items(), key=lambda kv: hersteller_reihenfolge.get(kv[0], 9999)
+        ):
             hersteller_anzahl = _anzahl(typ_dict)
             typ_html = []
-            for typ, eintraege in sorted(typ_dict.items(), key=lambda kv: -len(kv[1])):
+            for typ, eintraege in sorted(
+                typ_dict.items(), key=lambda kv: typ_reihenfolge.get((hersteller, kv[0]), 9999)
+            ):
                 karten = "\n".join(render_karte(z) for z in eintraege)
                 # Typ-Unterüberschrift nur zeigen, wenn sie zusätzliche Info bringt
                 # (nicht identisch mit dem Hersteller, z.B. bei Geringhoff ohne Modell).
@@ -141,10 +160,10 @@ def render_gruppe(gruppe_name: str, beschreibungen: dict) -> str:
     return "\n".join(teile_html)
 
 
-def render_html(gruppen: dict, gesamt: int, aus_letztem_lauf: int) -> str:
+def render_html(gruppen: dict, gesamt: int, aus_letztem_lauf: int, hersteller_reihenfolge: dict, typ_reihenfolge: dict) -> str:
     jetzt = datetime.now(timezone.utc).strftime("%d.%m.%Y, %H:%M UTC")
     if gruppen:
-        inhalt = "\n".join(render_gruppe(g, b) for g, b in gruppen.items())
+        inhalt = "\n".join(render_gruppe(g, b, hersteller_reihenfolge, typ_reihenfolge) for g, b in gruppen.items())
     else:
         inhalt = '<p style="color:var(--text-muted)">Keine Treffer in den letzten 24 Stunden.</p>'
 
@@ -235,9 +254,10 @@ def render_html(gruppen: dict, gesamt: int, aus_letztem_lauf: int) -> str:
 
 def main() -> None:
     suchbegriff_infos = lade_suchbegriff_infos()
+    hersteller_reihenfolge, typ_reihenfolge = lade_reihenfolge()
     sichtbare_zeilen, aus_letztem_lauf = lade_sichtbare_zeilen()
     gruppen = gruppiere(sichtbare_zeilen, suchbegriff_infos)
-    html = render_html(gruppen, len(sichtbare_zeilen), aus_letztem_lauf)
+    html = render_html(gruppen, len(sichtbare_zeilen), aus_letztem_lauf, hersteller_reihenfolge, typ_reihenfolge)
     AUSGABE_HTML.write_text(html, encoding="utf-8")
     print(f"radar.html geschrieben: {len(sichtbare_zeilen)} Treffer sichtbar (24h-Fenster), {aus_letztem_lauf} aus dem letzten Lauf.")
 
