@@ -28,6 +28,9 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from preis_utils import parse_preis_eur  # noqa: E402
+
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_SUCHBEGRIFFE = PROJEKT_ROOT / "config" / "suchbegriffe.json"
 CONFIG_PORTALE = PROJEKT_ROOT / "config" / "portale.json"
@@ -328,6 +331,8 @@ def hole_neue_treffer(
             continue
         if ist_ersatzteil(t["titel"]):
             continue
+        if parse_preis_eur(t["preis"]) is None:
+            continue  # kein erkennbarer Preis (z.B. "Preis auf Anfrage", "VB" allein) - Nutzerwunsch
         if t["id"] in gesehen:
             continue
         neue.append(t)

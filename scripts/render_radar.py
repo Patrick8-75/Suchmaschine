@@ -16,11 +16,14 @@ um zu entscheiden, ob eine Push-Benachrichtigung sinnvoll ist.
 """
 import csv
 import json
-import re
+import sys
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from preis_utils import parse_preis_eur  # noqa: E402
 
 PROJEKT_ROOT = Path(__file__).resolve().parent.parent
 TREFFER_CSV = PROJEKT_ROOT / "treffer.csv"
@@ -28,19 +31,6 @@ CONFIG_SUCHBEGRIFFE = PROJEKT_ROOT / "config" / "suchbegriffe.json"
 AUSGABE_HTML = PROJEKT_ROOT / "radar.html"
 
 ANZEIGE_FENSTER = timedelta(hours=24)
-
-
-def parse_preis_eur(preis: str) -> float | None:
-    # (?!\w) statt \b: \b matcht nach "€" nicht (€ ist kein Wortzeichen, und am
-    # Stringende gibt es dann keine Wortgrenze) - dadurch wurden bisher ALLE
-    # Preise mit "€"-Symbol (statt "EUR") faelschlich als nicht erkennbar behandelt.
-    m = re.search(r"(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*(?:€|EUR)(?!\w)", preis)
-    if not m:
-        return None
-    try:
-        return float(m.group(1).replace(".", "").replace(",", "."))
-    except ValueError:
-        return None
 
 
 def lade_suchbegriff_infos() -> dict[str, dict]:
