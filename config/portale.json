@@ -10,8 +10,8 @@
     {
       "name": "Maschinensucher",
       "basis_url": "https://www.maschinensucher.de",
-      "aktiv": true,
-      "hinweis": "Funktioniert zuverlässig: öffentliche Suchergebnisseite (server-seitig gerendert), sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz festgestellt. Eher Baumaschinen-lastig, für Landmaschinen ggf. wenige/keine Treffer."
+      "aktiv": false,
+      "hinweis": "Technisch funktionsfähig (server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc), aber auf Nutzerwunsch deaktiviert (22.08.2026): eher Baumaschinen-lastig und für Claas Conspeed/Geringhoff nicht interessant genug."
     },
     {
       "name": "Agriaffaires",
