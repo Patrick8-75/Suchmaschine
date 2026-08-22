@@ -71,6 +71,29 @@ def speichere_json(pfad: Path, daten: dict) -> None:
         json.dump(daten, f, ensure_ascii=False, indent=2)
 
 
+# ---------------------------------------------------------------- Baujahr/Betriebsstunden
+# Best-effort-Extraktion aus dem Text, den die jeweilige Portal-Ergebnisliste ohnehin schon
+# mitliefert (kein zusätzlicher Abruf der Detailseite je Anzeige). Liefert "", wenn das
+# Portal an dieser Stelle nichts Passendes zeigt.
+
+def extrahiere_baujahr(text: str) -> str:
+    m = re.search(r"baujahr:?\s*(\d{4})\b", text, re.IGNORECASE)
+    return m.group(1) if m else ""
+
+
+def extrahiere_betriebsstunden(text: str) -> str:
+    for muster in (
+        r"betriebsstunden:?\s*([\d.,]+)\s*h\b",
+        r"([\d.,]+)\s*bstd\.?",
+        r"([\d.,]+)\s*m/std\.?",
+        r"\b(\d{4}),\s*([\d.,]+)\s*h\b",  # Machinerypark: "2010, 12.888 h" ohne Label
+    ):
+        m = re.search(muster, text, re.IGNORECASE)
+        if m:
+            return m.groups()[-1] + " h"
+    return ""
+
+
 # ---------------------------------------------------------------- Portal-Scraper
 # Jede Funktion bekommt einen Suchbegriff und liefert eine Liste von Treffern:
 # {"titel": ..., "preis": ..., "ort": ..., "inserat_datum": ..., "url": ..., "id": ...}
@@ -98,6 +121,10 @@ def fetch_kleinanzeigen(suchbegriff: str) -> list[dict]:
         ort = ort_tag.get_text(strip=True) if ort_tag else ""
         datum_tag = art.select_one(".aditem-main--top--right")
         datum = datum_tag.get_text(strip=True) if datum_tag else ""
+        beschreibung_tag = art.select_one(".aditem-main--middle--description")
+        beschreibung_text = beschreibung_tag.get_text(" ", strip=True) if beschreibung_tag else ""
+        baujahr = extrahiere_baujahr(titel + " " + beschreibung_text)
+        betriebsstunden = extrahiere_betriebsstunden(titel + " " + beschreibung_text)
         treffer.append(
             {
                 "id": adid,
@@ -105,6 +132,8 @@ def fetch_kleinanzeigen(suchbegriff: str) -> list[dict]:
                 "preis": preis,
                 "ort": ort,
                 "inserat_datum": datum,
+                "baujahr": baujahr,
+                "betriebsstunden": betriebsstunden,
                 "url": "https://www.kleinanzeigen.de" + href,
             }
         )
@@ -142,6 +171,8 @@ def fetch_maschinensucher(suchbegriff: str) -> list[dict]:
         ort = ort_tag.get_text(strip=True) if ort_tag else ""
         if not href:
             continue
+        beschreibung_tag = card.select_one(".description-preview")
+        beschreibung_text = beschreibung_tag.get_text(" ", strip=True) if beschreibung_tag else ""
         treffer.append(
             {
                 "id": listing_id,
@@ -149,6 +180,8 @@ def fetch_maschinensucher(suchbegriff: str) -> list[dict]:
                 "preis": preis,
                 "ort": ort,
                 "inserat_datum": "",  # Maschinensucher zeigt kein Datum in der Trefferliste an
+                "baujahr": extrahiere_baujahr(beschreibung_text),
+                "betriebsstunden": extrahiere_betriebsstunden(beschreibung_text),
                 "url": "https://www.maschinensucher.de" + href,
             }
         )
@@ -169,12 +202,17 @@ def fetch_machinerypark(suchbegriff: str) -> list[dict]:
         if not titel_link:
             continue
         href = titel_link.get("href")
-        titel = titel_link.find("strong")
-        titel = titel.get_text(strip=True) if titel else titel_link.get_text(" ", strip=True)
+        titel_tag = titel_link.find("strong")
+        titel = titel_tag.get_text(strip=True) if titel_tag else titel_link.get_text(" ", strip=True)
+        # Nach dem Titel folgt im selben Link-Block z.B. "2010, 12.888 h, gebraucht"
+        rest_text = titel_link.get_text(" ", strip=True)
+        if titel and rest_text.startswith(titel):
+            rest_text = rest_text[len(titel):]
         preis_tag = item.select_one("strong.mpPrice")
         preis = preis_tag.get_text(strip=True) if preis_tag else ""
         ort_tag = item.select_one("small")
         ort = ort_tag.get_text(strip=True) if ort_tag else ""
+        baujahr_match = re.match(r"\s*(\d{4})\s*,", rest_text)
         treffer.append(
             {
                 "id": href,
@@ -182,6 +220,8 @@ def fetch_machinerypark(suchbegriff: str) -> list[dict]:
                 "preis": preis,
                 "ort": ort,
                 "inserat_datum": "",
+                "baujahr": baujahr_match.group(1) if baujahr_match else "",
+                "betriebsstunden": extrahiere_betriebsstunden(rest_text),
                 "url": "https://de.machinerypark.com" + href,
             }
         )
@@ -209,8 +249,19 @@ def _fetch_machineryline_familie(basis_url: str, suchbegriff: str) -> list[dict]
         preis = preis_tag.get_text(" ", strip=True) if preis_tag else ""
         ort_tag = item.select_one(".location-text")
         ort = ort_tag.get_text(strip=True) if ort_tag else ""
+        eigenschaften_tag = item.select_one(".sl-main-props")
+        eigenschaften_text = eigenschaften_tag.get_text(" ", strip=True) if eigenschaften_tag else ""
         treffer.append(
-            {"id": code, "titel": titel, "preis": preis, "ort": ort, "inserat_datum": "", "url": href}
+            {
+                "id": code,
+                "titel": titel,
+                "preis": preis,
+                "ort": ort,
+                "inserat_datum": "",
+                "baujahr": extrahiere_baujahr(eigenschaften_text),
+                "betriebsstunden": extrahiere_betriebsstunden(eigenschaften_text),
+                "url": href,
+            }
         )
     return treffer
 
@@ -248,9 +299,11 @@ def fetch_tec24(suchbegriff: str) -> list[dict]:
         )
 
         ort = ""
+        kategorie_text = ""
         kategorie_tag = item.select_one("span.category")
         if kategorie_tag:
-            m = re.search(r"-\s*(\d{5}\s+.+)$", kategorie_tag.get_text(" ", strip=True))
+            kategorie_text = kategorie_tag.get_text(" ", strip=True)
+            m = re.search(r"-\s*(\d{5}\s+.+)$", kategorie_text)
             if m:
                 ort = m.group(1).strip()
 
@@ -261,6 +314,8 @@ def fetch_tec24(suchbegriff: str) -> list[dict]:
                 "preis": preis,
                 "ort": ort,
                 "inserat_datum": "",
+                "baujahr": extrahiere_baujahr(kategorie_text),
+                "betriebsstunden": extrahiere_betriebsstunden(kategorie_text),
                 "url": "https://de.tec24.com" + href if href.startswith("/") else href,
             }
         )
@@ -409,11 +464,13 @@ def haenge_an_csv_an(zeilen: list[dict]) -> None:
         writer = csv.writer(f)
         if neu_anlegen:
             writer.writerow(
-                ["gefunden_am", "portal", "suchbegriff", "titel", "preis", "ort", "inserat_datum", "url"]
+                ["gefunden_am", "portal", "suchbegriff", "titel", "preis", "ort", "inserat_datum",
+                 "baujahr", "betriebsstunden", "url"]
             )
         for z in zeilen:
             writer.writerow(
-                [z["gefunden_am"], z["portal"], z["suchbegriff"], z["titel"], z["preis"], z["ort"], z["inserat_datum"], z["url"]]
+                [z["gefunden_am"], z["portal"], z["suchbegriff"], z["titel"], z["preis"], z["ort"],
+                 z["inserat_datum"], z.get("baujahr", ""), z.get("betriebsstunden", ""), z["url"]]
             )
 
 
@@ -435,12 +492,19 @@ def sende_email(neue_zeilen: list[dict]) -> None:
 
     empfaenger = "info@urny-handel.com"
     betreff = f"{len(neue_zeilen)} neue Maschinenangebote - P.Urny Handel"
-    zeilen_text = "\n\n".join(
-        f"- [{z['portal']}] {z['titel']}\n"
-        f"  Suchbegriff: {z['suchbegriff']} | Preis: {z['preis']} | Ort: {z['ort']}\n"
-        f"  {z['url']}"
-        for z in neue_zeilen
-    )
+    def _zeile(z: dict) -> str:
+        zusatz = " | ".join(
+            f"{label}: {z[feld]}" for feld, label in (("baujahr", "Baujahr"), ("betriebsstunden", "Bstd."))
+            if z.get(feld)
+        )
+        zusatz_zeile = f" | {zusatz}" if zusatz else ""
+        return (
+            f"- [{z['portal']}] {z['titel']}\n"
+            f"  Suchbegriff: {z['suchbegriff']} | Preis: {z['preis']} | Ort: {z['ort']}{zusatz_zeile}\n"
+            f"  {z['url']}"
+        )
+
+    zeilen_text = "\n\n".join(_zeile(z) for z in neue_zeilen)
     body = f"{len(neue_zeilen)} neue Anzeige(n) gefunden:\n\n{zeilen_text}\n"
 
     msg = MIMEText(body, "plain", "utf-8")
@@ -519,6 +583,8 @@ def main() -> None:
                         "preis": t["preis"],
                         "ort": t["ort"],
                         "inserat_datum": t["inserat_datum"],
+                        "baujahr": t.get("baujahr", ""),
+                        "betriebsstunden": t.get("betriebsstunden", ""),
                         "url": t["url"],
                     }
                 )

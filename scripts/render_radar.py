@@ -103,12 +103,16 @@ GRUPPEN_TAG_KLASSE = {"Landmaschine": "land", "Baumaschine": "bau"}
 
 
 def render_karte(z: dict) -> str:
+    baujahr_chip = f'<span class="meta-chip">📅 {escape(z["baujahr"])}</span>' if z.get("baujahr") else ""
+    stunden_chip = f'<span class="meta-chip">⏱ {escape(z["betriebsstunden"])}</span>' if z.get("betriebsstunden") else ""
     return f"""
     <div class="karte">
       <div class="karte-titel"><a href="{escape(z['url'])}" target="_blank" rel="noopener">{escape(z['titel'])}</a></div>
       <div class="karte-preis">{escape(z['preis'] or '–')}</div>
       <div class="karte-meta">
         <span class="meta-chip">📍 {escape(z['ort'] or 'unbekannt')}</span>
+        {baujahr_chip}
+        {stunden_chip}
         <span class="meta-chip">{escape(z['portal'])}</span>
         <span class="meta-chip">{escape(z['suchbegriff'])}</span>
       </div>
