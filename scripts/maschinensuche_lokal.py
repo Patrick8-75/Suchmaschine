@@ -254,6 +254,7 @@ ERSATZTEIL_BEGRIFFE = [
     "kettenlaufrolle", "winkelgetriebe", "getriebe", "pflückeinheit", "häckslerarm",
     "keilriemen", "zahnriemen", "dichtung", "bremsbelag", "kupplung", "hydraulikschlauch",
     "achse", "verschleißteile", "verschleissteile", "häckslermesser", "lagermaisschnecke",
+    "teile", "ersatzkette", "warntafel", "haube", "spitze", "adaption",
 ]
 
 
