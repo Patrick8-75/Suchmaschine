@@ -89,6 +89,7 @@ aufgenommen werden:
 | Die Baumaschinen Börse (die-baumaschinen-boerse.de) | Suche nur über feste Hersteller-Dropdown, Takeuchi nicht gelistet | Keine passende Suche |
 | Baggerboerse.de (Zeppelin) | Kein Kauf-Marktplatz, sondern Ankaufs-/Bewertungsformular | Kein Marktplatz |
 | AutoScout24 | Reine PKW-Plattform, keine Baumaschinen-Kategorie | Nicht relevant |
+| traktorpool.de | DataDome-Captcha (gleiche Unternehmensgruppe wie Agriaffaires/MachineryZone/Baupool) | Bot-Schutz |
 
 Bei "Nur JS-Suche" wäre ein Headless-Browser (z.B. Playwright) die Lösung, siehe
 "Mögliche Erweiterungen". Bei "Bot-Schutz" ist automatisiertes Umgehen nicht zulässig - dort

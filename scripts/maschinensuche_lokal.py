@@ -223,6 +223,50 @@ def fetch_autoline(suchbegriff: str) -> list[dict]:
     return _fetch_machineryline_familie("https://autoline.de", suchbegriff)
 
 
+def fetch_tec24(suchbegriff: str) -> list[dict]:
+    url = "https://de.tec24.com/suchergebnis.php"
+    params = {"typ": suchbegriff, "ft_search": "1", "rewriting": "none"}
+    r = requests.get(url, params=params, headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT)
+    r.raise_for_status()
+    r.encoding = "utf-8"
+    soup = BeautifulSoup(r.text, "lxml")
+
+    treffer = []
+    for item in soup.find_all("div", class_="item-list"):
+        titel_link = item.select_one("h5.add-title a")
+        if not titel_link:
+            continue
+        href = titel_link.get("href")
+        titel = titel_link.get_text(strip=True)
+
+        # tec24 zeigt oft Brutto- UND Nettopreis getrennt an - Netto bevorzugen,
+        # das war ja der Wunsch (klare Angabe statt Annahme).
+        netto_tag = item.select_one("h3.item-price-small")
+        brutto_tag = item.select_one("h2.item-price")
+        preis = netto_tag.get_text(strip=True) if netto_tag else (
+            brutto_tag.get_text(strip=True) if brutto_tag else ""
+        )
+
+        ort = ""
+        kategorie_tag = item.select_one("span.category")
+        if kategorie_tag:
+            m = re.search(r"-\s*(\d{5}\s+.+)$", kategorie_tag.get_text(" ", strip=True))
+            if m:
+                ort = m.group(1).strip()
+
+        treffer.append(
+            {
+                "id": href,
+                "titel": titel,
+                "preis": preis,
+                "ort": ort,
+                "inserat_datum": "",
+                "url": "https://de.tec24.com" + href if href.startswith("/") else href,
+            }
+        )
+    return treffer
+
+
 # Portalname -> Scraper-Funktion. Nur hier eintragen, was tatsächlich funktioniert
 # (siehe config/portale.json "hinweis" für den Status der übrigen Portale).
 SCRAPER = {
@@ -231,6 +275,7 @@ SCRAPER = {
     "Machinerypark": fetch_machinerypark,
     "Machineryline": fetch_machineryline,
     "Autoline": fetch_autoline,
+    "tec24": fetch_tec24,
 }
 
 

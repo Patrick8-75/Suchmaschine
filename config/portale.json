@@ -35,6 +35,13 @@
       "aktiv": false,
       "gruppen": ["Baumaschine"],
       "hinweis": "Deaktiviert (Nutzerentscheidung, nicht wegen technischer Probleme): läuft auf derselben Plattform wie Machineryline, 19 von 28 Treffern waren im Test identisch - würde nur Duplikate erzeugen. Technisch funktionsfähig, GET /search_text.php?query=<begriff> - bei Bedarf jederzeit mit 'aktiv': true reaktivierbar."
+    },
+    {
+      "name": "tec24",
+      "basis_url": "https://de.tec24.com",
+      "aktiv": true,
+      "gruppen": [],
+      "hinweis": "Auf Nutzerhinweis (22.08.2026) geprüft und hinzugefügt. Funktioniert zuverlässig: GET /suchergebnis.php?typ=<begriff>&ft_search=1&rewriting=none liefert echte, gefilterte Treffer für Land- und Baumaschinen. Zeigt oft Brutto- UND Nettopreis getrennt an - wir übernehmen bevorzugt den Nettopreis. Kein Bot-Schutz festgestellt."
     }
   ]
 }
