@@ -152,11 +152,82 @@ def fetch_maschinensucher(suchbegriff: str) -> list[dict]:
     return treffer
 
 
+def fetch_machinerypark(suchbegriff: str) -> list[dict]:
+    url = "https://de.machinerypark.com/suchen"
+    params = {"search": suchbegriff, "result": "true"}
+    r = requests.get(url, params=params, headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT)
+    r.raise_for_status()
+    r.encoding = "utf-8"
+    soup = BeautifulSoup(r.text, "lxml")
+
+    treffer = []
+    for item in soup.find_all("section", class_="mpOfferItem"):
+        titel_link = item.select_one("p.mb-3 a[href]")
+        if not titel_link:
+            continue
+        href = titel_link.get("href")
+        titel = titel_link.find("strong")
+        titel = titel.get_text(strip=True) if titel else titel_link.get_text(" ", strip=True)
+        preis_tag = item.select_one("strong.mpPrice")
+        preis = preis_tag.get_text(strip=True) if preis_tag else ""
+        ort_tag = item.select_one("small")
+        ort = ort_tag.get_text(strip=True) if ort_tag else ""
+        treffer.append(
+            {
+                "id": href,
+                "titel": titel,
+                "preis": preis,
+                "ort": ort,
+                "inserat_datum": "",
+                "url": "https://de.machinerypark.com" + href,
+            }
+        )
+    return treffer
+
+
+def _fetch_machineryline_familie(basis_url: str, suchbegriff: str) -> list[dict]:
+    """Gemeinsame Scraper-Logik für machineryline.de und autoline.de - beide laufen
+    auf derselben Plattform (identische Markup-Struktur)."""
+    url = f"{basis_url}/search_text.php"
+    r = requests.get(url, params={"query": suchbegriff}, headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT)
+    r.raise_for_status()
+    r.encoding = "utf-8"
+    soup = BeautifulSoup(r.text, "lxml")
+
+    treffer = []
+    for item in soup.find_all("div", class_="sales-list-item"):
+        code = item.get("data-code")
+        titel_link = item.select_one("div.sl-item__title a")
+        if not code or not titel_link:
+            continue
+        titel = titel_link.get_text(strip=True)
+        href = titel_link.get("href")
+        preis_tag = item.select_one("div.sl-item__price")
+        preis = preis_tag.get_text(" ", strip=True) if preis_tag else ""
+        ort_tag = item.select_one(".location-text")
+        ort = ort_tag.get_text(strip=True) if ort_tag else ""
+        treffer.append(
+            {"id": code, "titel": titel, "preis": preis, "ort": ort, "inserat_datum": "", "url": href}
+        )
+    return treffer
+
+
+def fetch_machineryline(suchbegriff: str) -> list[dict]:
+    return _fetch_machineryline_familie("https://machineryline.de", suchbegriff)
+
+
+def fetch_autoline(suchbegriff: str) -> list[dict]:
+    return _fetch_machineryline_familie("https://autoline.de", suchbegriff)
+
+
 # Portalname -> Scraper-Funktion. Nur hier eintragen, was tatsächlich funktioniert
 # (siehe config/portale.json "hinweis" für den Status der übrigen Portale).
 SCRAPER = {
     "eBay Kleinanzeigen": fetch_kleinanzeigen,
     "Maschinensucher": fetch_maschinensucher,
+    "Machinerypark": fetch_machinerypark,
+    "Machineryline": fetch_machineryline,
+    "Autoline": fetch_autoline,
 }
 
 

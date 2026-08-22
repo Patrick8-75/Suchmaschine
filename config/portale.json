@@ -16,6 +16,55 @@
       "hinweis": "Auf Nutzerwunsch (22.08.2026) auf die Gruppe 'Baumaschine' beschränkt reaktiviert - dediziertes Baumaschinenportal, für Landmaschinen (Claas Conspeed/Geringhoff) nicht relevant genug. Funktioniert zuverlässig: server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz. Echte Takeuchi-TB145/TB175-Treffer bestätigt."
     },
     {
+      "name": "Machinerypark",
+      "basis_url": "https://de.machinerypark.com",
+      "aktiv": true,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Funktioniert zuverlässig: GET /suchen?search=<begriff>&result=true liefert echte, gefilterte Treffer mit Preis/Ort/Baujahr. Kein Bot-Schutz festgestellt."
+    },
+    {
+      "name": "Machineryline",
+      "basis_url": "https://machineryline.de",
+      "aktiv": true,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Internationale Maschinenbörse, GET /search_text.php?query=<begriff> liefert echte Treffer (auch aus dem Ausland). Kein Bot-Schutz festgestellt."
+    },
+    {
+      "name": "Autoline",
+      "basis_url": "https://autoline.de",
+      "aktiv": true,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Gleiche Plattform wie Machineryline (identische Struktur), teils überschneidende Angebote. GET /search_text.php?query=<begriff>. Kein Bot-Schutz festgestellt."
+    },
+    {
+      "name": "MachineryZone",
+      "basis_url": "https://www.machineryzone.de",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "NICHT automatisierbar: DataDome-Captcha (geo.captcha-delivery.com), gleiche Unternehmensgruppe wie Agriaffaires/Baupool. Manuell im Browser weiter durchsuchbar."
+    },
+    {
+      "name": "mobile.de",
+      "basis_url": "https://www.mobile.de",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "NICHT automatisierbar: blockt Skript-Zugriffe explizit mit 'Access denied' (403). Manuell im Browser weiter durchsuchbar."
+    },
+    {
+      "name": "Baupool",
+      "basis_url": "https://www.baupool.com",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "NICHT automatisierbar: DataDome-Captcha, gleiche Unternehmensgruppe wie Agriaffaires/MachineryZone. baupool.de existiert nicht (falscher Domain-Vorschlag), echte Domain ist baupool.com."
+    },
+    {
+      "name": "AutoScout24",
+      "basis_url": "https://www.autoscout24.de",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Nicht relevant: reine PKW-Plattform, keine Baumaschinen-/Bagger-Kategorie vorhanden."
+    },
+    {
       "name": "Agriaffaires",
       "basis_url": "https://www.agriaffaires.de",
       "aktiv": false,
