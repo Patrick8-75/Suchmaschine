@@ -40,6 +40,7 @@ def lade_suchbegriff_infos() -> dict[str, dict]:
             "gruppe": s["gruppe"],
             "beschreibung": s["beschreibung"],
             "hersteller": s.get("hersteller", s["begriff"]),
+            "typ": s.get("typ", s["begriff"]),
         }
         for s in cfg["suchbegriffe"]
     }
@@ -67,18 +68,19 @@ def lade_sichtbare_zeilen() -> tuple[list[dict], int]:
 
 
 def gruppiere(zeilen: list[dict], suchbegriff_infos: dict) -> dict:
-    """gruppe -> beschreibung (Maschinentyp) -> hersteller -> Treffer, je Hersteller nach
-    Preis aufsteigend sortiert."""
-    gruppen = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-    fallback = lambda begriff: {"gruppe": "Sonstiges", "beschreibung": begriff, "hersteller": begriff}
+    """gruppe -> beschreibung (Maschinentyp) -> hersteller -> typ -> Treffer, je Typ
+    nach Preis aufsteigend sortiert."""
+    gruppen = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
+    fallback = lambda begriff: {"gruppe": "Sonstiges", "beschreibung": begriff, "hersteller": begriff, "typ": begriff}
     for z in zeilen:
         info = suchbegriff_infos.get(z["suchbegriff"]) or fallback(z["suchbegriff"])
-        gruppen[info["gruppe"]][info["beschreibung"]][info["hersteller"]].append(z)
+        gruppen[info["gruppe"]][info["beschreibung"]][info["hersteller"]][info["typ"]].append(z)
 
     for beschreibungen in gruppen.values():
         for hersteller_dict in beschreibungen.values():
-            for eintraege in hersteller_dict.values():
-                eintraege.sort(key=lambda z: (parse_preis_eur(z["preis"]) is None, parse_preis_eur(z["preis"]) or 0))
+            for typ_dict in hersteller_dict.values():
+                for eintraege in typ_dict.values():
+                    eintraege.sort(key=lambda z: (parse_preis_eur(z["preis"]) is None, parse_preis_eur(z["preis"]) or 0))
     return gruppen
 
 
@@ -98,20 +100,34 @@ def render_karte(z: dict) -> str:
     </div>"""
 
 
+def _anzahl(hersteller_dict_wert: dict) -> int:
+    return sum(len(v) for v in hersteller_dict_wert.values())
+
+
 def render_gruppe(gruppe_name: str, beschreibungen: dict) -> str:
     tag_klasse = GRUPPEN_TAG_KLASSE.get(gruppe_name, "bau")
     teile_html = []
     for beschreibung, hersteller_dict in sorted(
-        beschreibungen.items(), key=lambda kv: -sum(len(v) for v in kv[1].values())
+        beschreibungen.items(), key=lambda kv: -sum(_anzahl(v) for v in kv[1].values())
     ):
-        gesamt = sum(len(v) for v in hersteller_dict.values())
+        gesamt = sum(_anzahl(v) for v in hersteller_dict.values())
         hersteller_html = []
-        for hersteller, eintraege in sorted(hersteller_dict.items(), key=lambda kv: -len(kv[1])):
-            karten = "\n".join(render_karte(z) for z in eintraege)
+        for hersteller, typ_dict in sorted(hersteller_dict.items(), key=lambda kv: -_anzahl(kv[1])):
+            hersteller_anzahl = _anzahl(typ_dict)
+            typ_html = []
+            for typ, eintraege in sorted(typ_dict.items(), key=lambda kv: -len(kv[1])):
+                karten = "\n".join(render_karte(z) for z in eintraege)
+                # Typ-Unterüberschrift nur zeigen, wenn sie zusätzliche Info bringt
+                # (nicht identisch mit dem Hersteller, z.B. bei Geringhoff ohne Modell).
+                if typ != hersteller:
+                    typ_html.append(f"""
+        <p class="typ-titel">{escape(typ)} &middot; {len(eintraege)}</p>""")
+                typ_html.append(f"""
+        <div class="karten-grid">{karten}</div>""")
             hersteller_html.append(f"""
       <div class="hersteller-block">
-        <p class="hersteller-titel">{escape(hersteller)} &middot; {len(eintraege)}</p>
-        <div class="karten-grid">{karten}</div>
+        <p class="hersteller-titel">{escape(hersteller)} &middot; {hersteller_anzahl}</p>
+        {"".join(typ_html)}
       </div>""")
         teile_html.append(f"""
     <div class="unterkategorie">
@@ -181,11 +197,16 @@ def render_html(gruppen: dict, gesamt: int, aus_letztem_lauf: int) -> str:
   .gruppen-tag.land{{ background: var(--tag-land-bg); color: var(--tag-land-text); }}
   .kategorie-anzahl{{ font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: var(--text-muted); margin-left: auto; }}
   .unterkategorie{{ margin-bottom: 2rem; }}
-  .hersteller-block{{ margin-bottom: 1.1rem; }}
+  .hersteller-block{{ margin-bottom: 1.4rem; }}
   .hersteller-titel{{
-    font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-muted); margin: 0 0 0.5rem 0;
+    font-family: "Oswald", sans-serif; font-size: 1.02rem; font-weight: 600; letter-spacing: 0.02em;
+    color: var(--text); margin: 0 0 0.6rem 0;
   }}
+  .typ-titel{{
+    font-family: "IBM Plex Mono", monospace; font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-muted); margin: 0.9rem 0 0.5rem 0;
+  }}
+  .typ-titel:first-of-type{{ margin-top: 0; }}
   .karten-grid{{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.7rem; }}
   .karte{{ background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }}
   .karte-titel a{{ color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.96rem; line-height: 1.3; }}

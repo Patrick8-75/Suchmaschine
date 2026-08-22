@@ -1,11 +1,15 @@
 {
-  "_hinweis": "Liste der Maschinentypen/Suchbegriffe, nach denen mehrmals täglich gesucht wird. 'gruppe' bestimmt, welche Portale mitsuchen (siehe config/portale.json 'gruppen') - 'Landmaschine' und 'Baumaschine' sind aktuell die zwei genutzten Gruppen, aber frei wählbar. 'hersteller' wird im Radar zur Differenzierung innerhalb eines Maschinentyps verwendet. 'erfordert_eines_von' ist optional: bei breiten Markensuchen muss zusätzlich mindestens eines dieser Wörter im Titel stehen. Einfach Einträge hinzufügen, ändern oder löschen - keine Programmierkenntnisse nötig.",
+  "_hinweis": "Liste der Maschinentypen/Suchbegriffe, nach denen mehrmals täglich gesucht wird. 'gruppe' bestimmt, welche Portale mitsuchen (siehe config/portale.json 'gruppen') - 'Landmaschine' und 'Baumaschine' sind aktuell die zwei genutzten Gruppen, aber frei wählbar. 'hersteller' und 'typ' werden im Radar zur Gliederung verwendet (Gruppe -> Maschinentyp -> Hersteller -> Typ). 'erfordert_eines_von' ist optional: bei breiten Markensuchen muss zusätzlich mindestens eines dieser Wörter im Titel stehen. Einfach Einträge hinzufügen, ändern oder löschen - keine Programmierkenntnisse nötig.",
   "suchbegriffe": [
-    {"begriff": "Claas Conspeed", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas"},
-    {"begriff": "Claas Corio", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas"},
-    {"begriff": "Geringhoff", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Geringhoff"},
-    {"begriff": "Takeuchi TB 145", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi"},
-    {"begriff": "Takeuchi TB 175", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi"}
+    {"begriff": "Claas Conspeed", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas", "typ": "Conspeed"},
+    {"begriff": "Claas Corio", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas", "typ": "Corio"},
+    {"begriff": "Geringhoff", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Geringhoff", "typ": "Geringhoff"},
+    {"begriff": "Takeuchi TB 145", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 145"},
+    {"begriff": "Takeuchi TB 175", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 175"},
+    {"begriff": "Takeuchi TB 230", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 230"},
+    {"begriff": "Takeuchi TB 250", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 250"},
+    {"begriff": "Takeuchi TB 260", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 260"},
+    {"begriff": "Takeuchi TB 290", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 290"}
   ],
   "ausschluesse": {
     "_hinweis": "Optional: Wörter, die in Anzeigen NICHT vorkommen dürfen, damit sie trotz Treffer beim Suchbegriff nicht gemeldet werden (z.B. Spielzeug/Ersatzteile aussortieren).",
