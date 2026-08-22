@@ -1,0 +1,53 @@
+{
+  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal ab, ohne den Eintrag zu löschen. 'suche_url_vorlage' enthält {suchbegriff} als Platzhalter (URL-kodiert einsetzen, Leerzeichen -> + oder -). Bereits verifiziert per Browser-Test am 22.08.2026: kleinanzeigen und maschinensucher. Bei den anderen Portalen soll der Agent die tatsächliche Such-URL beim Lauf selbst ermitteln (Suchfeld auf der Startseite benutzen bzw. bekanntes Muster versuchen) und diese Datei bei Bedarf aktualisieren.",
+  "portale": [
+    {
+      "name": "eBay Kleinanzeigen",
+      "basis_url": "https://www.kleinanzeigen.de",
+      "suche_url_vorlage": "https://www.kleinanzeigen.de/s-{suchbegriff}/k0",
+      "sortierung": "Standard-Suche ist bereits nach Neueste sortiert (sortingField=SORTING_DATE)",
+      "aktiv": true,
+      "hinweis": "Kein Login/Suchauftrag verwenden (würde Kontoerstellung erfordern) - stattdessen direkt die öffentliche Ergebnisliste lesen."
+    },
+    {
+      "name": "Maschinensucher",
+      "basis_url": "https://www.maschinensucher.de",
+      "suche_url_vorlage": "https://www.maschinensucher.de/main/search/index?search-word={suchbegriff}&sort-field=eintragsdatum&sort-direction=desc",
+      "sortierung": "sort-field=eintragsdatum&sort-direction=desc",
+      "aktiv": true,
+      "hinweis": ""
+    },
+    {
+      "name": "Agriaffaires",
+      "basis_url": "https://www.agriaffaires.de",
+      "suche_url_vorlage": "",
+      "sortierung": "beim Lauf ermitteln (nach Datum/Neueste sortieren, falls Option vorhanden)",
+      "aktiv": true,
+      "hinweis": "URL-Muster noch nicht verifiziert - Agent soll die Suche über das Suchfeld auf agriaffaires.de nutzen und die passende URL herausfinden."
+    },
+    {
+      "name": "Technikbörse",
+      "basis_url": "https://www.technikboerse.com",
+      "suche_url_vorlage": "",
+      "sortierung": "beim Lauf ermitteln",
+      "aktiv": true,
+      "hinweis": "Hat eigene 'Suchaufträge'-Funktion, aber die erfordert ein Konto - stattdessen öffentliche Ergebnisliste über das Suchfeld nutzen."
+    },
+    {
+      "name": "Landwirt.com",
+      "basis_url": "https://www.landwirt.com",
+      "suche_url_vorlage": "",
+      "sortierung": "beim Lauf ermitteln",
+      "aktiv": true,
+      "hinweis": ""
+    },
+    {
+      "name": "Mascus",
+      "basis_url": "https://www.mascus.de",
+      "suche_url_vorlage": "",
+      "sortierung": "beim Lauf ermitteln",
+      "aktiv": true,
+      "hinweis": ""
+    }
+  ]
+}
