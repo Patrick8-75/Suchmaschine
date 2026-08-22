@@ -319,6 +319,23 @@ def ist_ersatzteil(titel: str) -> bool:
     return bool(ERSATZTEIL_GANZWORT_REGEX.search(titel_klein))
 
 
+# Mietmaschinen statt Kaufangebote (Nutzerwunsch 22.08.2026: "keine Mietmaschinen
+# anzeigen"). Bei Machineryline steht das oft nur im URL-Pfad (/-/Miete/...), nicht
+# im Titel selbst - deshalb wird hier zusätzlich die URL geprüft.
+MIETE_BEGRIFFE = [
+    "miete", "mieten", "vermietung", "vermieten", "zu vermieten", "leihmaschine",
+    "mietmaschine", "leasing", "rental",
+]
+MIETE_URL_SEGMENT_REGEX = re.compile(r"/miete/", re.IGNORECASE)
+
+
+def ist_mietmaschine(titel: str, url: str) -> bool:
+    titel_klein = titel.lower()
+    if any(begriff in titel_klein for begriff in MIETE_BEGRIFFE):
+        return True
+    return bool(MIETE_URL_SEGMENT_REGEX.search(url or ""))
+
+
 def normalisiere_fuer_abgleich(text: str) -> str:
     """Buchstabe+Zahl-Grenzen mit Leerzeichen/Bindestrich dazwischen zusammenziehen,
     damit z.B. 'TB 145' und 'TB145' beim Abgleich als gleich gelten."""
@@ -375,6 +392,8 @@ def hole_neue_treffer(
         if gehoert_zu_ausschluss(t["titel"], ausschluesse):
             continue
         if ist_ersatzteil(t["titel"]):
+            continue
+        if ist_mietmaschine(t["titel"], t["url"]):
             continue
         if parse_preis_eur(t["preis"]) is None:
             continue  # kein erkennbarer Preis (z.B. "Preis auf Anfrage", "VB" allein) - Nutzerwunsch
