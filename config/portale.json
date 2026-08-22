@@ -1,41 +1,61 @@
 {
-  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal ab, ohne den Eintrag zu löschen. Status Stand 22.08.2026 (echte Tests mit Python/requests durchgeführt, siehe 'hinweis' je Portal).",
+  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal komplett ab. 'gruppen' schränkt ein, für welche Suchbegriff-Gruppen (siehe config/suchbegriffe.json) das Portal mitsucht - leer/fehlend = für alle Gruppen. Status Stand 22.08.2026 (echte Tests mit Python/requests durchgeführt, siehe 'hinweis' je Portal).",
   "portale": [
     {
       "name": "eBay Kleinanzeigen",
       "basis_url": "https://www.kleinanzeigen.de",
       "aktiv": true,
-      "hinweis": "Funktioniert zuverlässig: öffentliche Suchergebnisseite (server-seitig gerendert), Standard-Sortierung ist bereits nach Neueste, kein Bot-Schutz festgestellt."
+      "gruppen": [],
+      "hinweis": "Funktioniert zuverlässig: öffentliche Suchergebnisseite (server-seitig gerendert), Standard-Sortierung ist bereits nach Neueste, kein Bot-Schutz festgestellt. Allgemeines Portal, sucht für alle Gruppen mit."
     },
     {
       "name": "Maschinensucher",
       "basis_url": "https://www.maschinensucher.de",
-      "aktiv": false,
-      "hinweis": "Technisch funktionsfähig (server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc), aber auf Nutzerwunsch deaktiviert (22.08.2026): eher Baumaschinen-lastig und für Claas Conspeed/Geringhoff nicht interessant genug."
+      "aktiv": true,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Auf Nutzerwunsch (22.08.2026) auf die Gruppe 'Baumaschine' beschränkt reaktiviert - dediziertes Baumaschinenportal, für Landmaschinen (Claas Conspeed/Geringhoff) nicht relevant genug. Funktioniert zuverlässig: server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz. Echte Takeuchi-TB145/TB175-Treffer bestätigt."
     },
     {
       "name": "Agriaffaires",
       "basis_url": "https://www.agriaffaires.de",
       "aktiv": false,
+      "gruppen": ["Landmaschine"],
       "hinweis": "NICHT automatisierbar: Seite ist durch DataDome-Captcha geschützt (geo.captcha-delivery.com). Automatisiertes Umgehen von Bot-/Captcha-Schutz ist nicht zulässig. Manuell im Browser weiter durchsuchbar."
     },
     {
       "name": "Technikbörse",
       "basis_url": "https://www.technikboerse.com",
       "aktiv": false,
+      "gruppen": ["Landmaschine", "Baumaschine"],
       "hinweis": "NICHT automatisierbar: Suchanfrage per Skript wird explizit als 'User-Agent spoofing detected' geblockt (aktive Bot-Erkennung). Manuell im Browser weiter durchsuchbar; hat auch einen eigenen 'Suchauftrag' (setzt Konto voraus, daher hier nicht genutzt)."
     },
     {
       "name": "Landwirt.com",
       "basis_url": "https://www.landwirt.com",
       "aktiv": false,
+      "gruppen": ["Landmaschine"],
       "hinweis": "Aktuell nicht unterstützt: Die Kleinanzeigen-Suche läuft clientseitig (JavaScript) - ein einfacher HTTP-Abruf liefert nur die ungefilterte allgemeine Anzeigenliste, keine echten Suchtreffer. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
     },
     {
       "name": "Mascus",
       "basis_url": "https://www.mascus.de",
       "aktiv": false,
+      "gruppen": ["Landmaschine", "Baumaschine"],
       "hinweis": "Aktuell nicht unterstützt: Suchergebnisse werden clientseitig (JavaScript) nachgeladen, im per HTTP abgerufenen HTML sind keine Anzeigen enthalten. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
+    },
+    {
+      "name": "Die Baumaschinen Börse (DBMB)",
+      "basis_url": "https://die-baumaschinen-boerse.de",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Technisch erreichbar (kein Bot-Schutz), aber die Suche läuft nur über eine feste Hersteller-Dropdown-Liste ohne freien Suchbegriff - Takeuchi steht dort nicht einmal zur Auswahl. Für unsere Suchbegriffe nicht nutzbar."
+    },
+    {
+      "name": "Baggerboerse.de (Zeppelin)",
+      "basis_url": "https://baggerboerse.de",
+      "aktiv": false,
+      "gruppen": ["Baumaschine"],
+      "hinweis": "Kein Kauf-Marktplatz, sondern ein Ankauf-/Bewertungstool von Zeppelin (Verkaufsformular für eigene Maschinen) - enthält keine durchsuchbaren Angebote. Für unseren Zweck nicht geeignet."
     }
   ]
 }

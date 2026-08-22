@@ -109,9 +109,14 @@ def fetch_kleinanzeigen(suchbegriff: str) -> list[dict]:
 
 
 def fetch_maschinensucher(suchbegriff: str) -> list[dict]:
+    # Maschinensucher kommt mit mehrwortigen Modellbezeichnungen (z.B. "Takeuchi TB 145")
+    # nicht zuverlässig klar und liefert dann irrelevante Treffer - nur das erste Wort
+    # (i.d.R. die Marke) an die Portalsuche geben, die genaue Modell-Übereinstimmung
+    # übernimmt hinterher passt_wirklich_zum_suchbegriff() anhand des vollen Suchbegriffs.
+    suchwort_fuer_portal = suchbegriff.split()[0]
     url = "https://www.maschinensucher.de/main/search/index"
     params = {
-        "search-word": suchbegriff,
+        "search-word": suchwort_fuer_portal,
         "sort-field": "eintragsdatum",
         "sort-direction": "desc",
     }
@@ -162,14 +167,24 @@ def gehoert_zu_ausschluss(titel: str, ausschluesse: list[str]) -> bool:
     return any(wort.lower() in titel_klein for wort in ausschluesse)
 
 
+def normalisiere_fuer_abgleich(text: str) -> str:
+    """Buchstabe+Zahl-Grenzen mit Leerzeichen/Bindestrich dazwischen zusammenziehen,
+    damit z.B. 'TB 145' und 'TB145' beim Abgleich als gleich gelten."""
+    text = text.lower()
+    text = re.sub(r"(?<=[a-zäöü])[\s\-]+(?=\d)", "", text)
+    text = re.sub(r"(?<=\d)[\s\-]+(?=[a-zäöü])", "", text)
+    return text
+
+
 def passt_wirklich_zum_suchbegriff(titel: str, suchbegriff: str) -> bool:
     """Manche Portale (z.B. Maschinensucher) suchen unscharf ('enthält irgendeins
     der Wörter') statt nach der genauen Phrase. Hier alle Wörter des Suchbegriffs
     verlangen, damit z.B. bei 'Claas Conspeed' nicht jede beliebige Claas-Anzeige
-    durchrutscht."""
-    titel_klein = titel.lower()
-    woerter = [w for w in re.split(r"\s+", suchbegriff.lower()) if w]
-    return all(w in titel_klein for w in woerter)
+    durchrutscht - und Modellbezeichnungen wie 'TB 145'/'TB145' werden vor dem
+    Abgleich vereinheitlicht."""
+    titel_norm = normalisiere_fuer_abgleich(titel)
+    woerter = [w for w in re.split(r"\s+", normalisiere_fuer_abgleich(suchbegriff)) if w]
+    return all(w in titel_norm for w in woerter)
 
 
 def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], ausschluesse: list[str]) -> list[dict]:
@@ -291,10 +306,15 @@ def main() -> None:
         if not portal.get("aktiv"):
             continue
         name = portal["name"]
+        portal_gruppen = portal.get("gruppen") or []  # leer = alle Gruppen
         gesehen = set(state["portale"].get(name, []))
         neu_fuer_portal = 0
 
-        for suchbegriff in suchbegriffe:
+        passende_suchbegriffe = [
+            s for s in suchbegriffe if not portal_gruppen or s["gruppe"] in portal_gruppen
+        ]
+        for eintrag in passende_suchbegriffe:
+            suchbegriff = eintrag["begriff"]
             neue = hole_neue_treffer(name, suchbegriff, gesehen, ausschluesse)
             for t in neue:
                 alle_neuen_zeilen.append(
