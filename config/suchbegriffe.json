@@ -1,10 +1,14 @@
 {
   "_hinweis": "Liste der Maschinentypen/Suchbegriffe, nach denen mehrmals täglich auf den Portalen gesucht wird. Einfach Zeilen hinzufügen, ändern oder löschen - keine Programmierkenntnisse nötig. Jeder Begriff wird einzeln auf jedem aktiven Portal gesucht.",
   "suchbegriffe": [
-    "Traktor",
-    "Bagger",
-    "Radlader"
+    "Claas Conspeed",
+    "Geringhoff"
   ],
+  "_suchbegriffe_kategorien": {
+    "_hinweis": "Nur zur Dokumentation, wird von der Routine nicht ausgewertet.",
+    "Claas Conspeed": "Maispflücker / Erntevorsatz",
+    "Geringhoff": "Maispflücker / Erntevorsatz"
+  },
   "ausschluesse": {
     "_hinweis": "Optional: Wörter, die in Anzeigen NICHT vorkommen dürfen, damit sie trotz Treffer beim Suchbegriff nicht gemeldet werden (z.B. Spielzeug/Ersatzteile aussortieren).",
     "global": ["Spielzeug", "Modell 1:32", "Ersatzteil", "defekt"]
