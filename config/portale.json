@@ -32,9 +32,9 @@
     {
       "name": "Autoline",
       "basis_url": "https://autoline.de",
-      "aktiv": true,
+      "aktiv": false,
       "gruppen": ["Baumaschine"],
-      "hinweis": "Auf Nutzerwunsch (22.08.2026) hinzugefügt. Gleiche Plattform wie Machineryline (identische Struktur), teils überschneidende Angebote. GET /search_text.php?query=<begriff>. Kein Bot-Schutz festgestellt."
+      "hinweis": "Deaktiviert (22.08.2026, Nutzerentscheidung): läuft auf derselben Plattform wie Machineryline, 19 von 28 Treffern waren im Test identisch - würde nur Duplikate erzeugen. Technisch funktionsfähig, GET /search_text.php?query=<begriff>."
     },
     {
       "name": "MachineryZone",
