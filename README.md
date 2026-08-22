@@ -2,66 +2,71 @@
 
 Durchsucht mehrmals täglich automatisch mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu
 den in `config/suchbegriffe.json` hinterlegten Maschinentypen und trägt neue Treffer in
-`treffer.csv` ein.
+`treffer.csv` ein. Läuft **lokal auf diesem Rechner** über die Windows-Aufgabenplanung (siehe
+"Hintergrund" unten für den Grund).
+
+## Einmaliges Setup
+
+1. Python-Pakete installieren:
+   ```
+   pip install -r requirements.txt
+   ```
+2. SMTP-Zugangsdaten für die E-Mail-Benachrichtigung hinterlegen (Passwort landet sicher im
+   Windows Credential Manager, nicht in einer Datei):
+   ```
+   python scripts/setup_email_zugangsdaten.py
+   ```
+3. Testlauf von Hand:
+   ```
+   python scripts/maschinensuche_lokal.py
+   ```
+4. Windows-Aufgabenplanung einrichten (läuft danach automatisch, mehrmals täglich):
+   ```
+   powershell -ExecutionPolicy Bypass -File register_task.ps1
+   ```
+
+Der PC muss zu den geplanten Zeiten eingeschaltet/angemeldet sein, damit der Lauf startet.
 
 ## Wie du Maschinentypen änderst
 
 Öffne [`config/suchbegriffe.json`](config/suchbegriffe.json) und passe die Liste `suchbegriffe`
-an - eine Zeile pro Begriff, z.B. `"Traktor"`, `"Bagger"`, `"Radlader"`. Wörter unter
-`ausschluesse.global` werden verwendet, um offensichtliche Fehltreffer (Spielzeug, Ersatzteile
-usw.) auszusortieren. Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und
-committen (oder mir im Chat die gewünschte Änderung sagen).
+an - eine Zeile pro Begriff, aktuell `"Claas Conspeed"` und `"Geringhoff"`. Wörter unter
+`ausschluesse.global` sortieren offensichtliche Fehltreffer (Spielzeug, Ersatzteile usw.) aus.
+Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern, der nächste
+geplante Lauf verwendet automatisch die neue Liste.
 
-## Portale
+## Portale - aktueller Stand
 
-Siehe [`config/portale.json`](config/portale.json). Ein Portal lässt sich mit `"aktiv": false`
-abschalten, ohne den Eintrag zu löschen.
+Siehe [`config/portale.json`](config/portale.json) für Details je Portal. Kurzfassung:
 
-## Wie die Suche läuft
+| Portal | Status | Grund |
+|---|---|---|
+| eBay Kleinanzeigen | ✅ aktiv | funktioniert zuverlässig |
+| Maschinensucher | ✅ aktiv | funktioniert zuverlässig (eher Baumaschinen-Fokus) |
+| Agriaffaires | ❌ inaktiv | Captcha-/Bot-Schutz (DataDome) - nicht automatisierbar |
+| Technikbörse | ❌ inaktiv | aktive Bot-Erkennung blockt Skript-Zugriffe |
+| Landwirt.com | ❌ inaktiv | Suche läuft nur per JavaScript, HTTP-Abruf liefert keine echten Treffer |
+| Mascus | ❌ inaktiv | Suche läuft nur per JavaScript, HTTP-Abruf liefert keine echten Treffer |
 
-Eine geplante Cloud-Routine (`claude.ai/code/routines`) klont dieses Repository mehrmals täglich,
-liest `config/suchbegriffe.json` und `config/portale.json`, sucht auf jedem aktiven Portal nach
-jedem Suchbegriff (Ergebnisse jeweils nach "Neueste" sortiert), vergleicht die gefundenen
-Anzeigen-IDs mit `state/gesehene_anzeigen.json` und trägt nur wirklich neue Treffer in
-`treffer.csv` ein. Anschließend committet und pusht sie die aktualisierte `state/`- und
-`treffer.csv`-Datei in dieses Repo.
-
-**Kein Login/keine Konten:** Es werden ausschließlich öffentlich einsehbare Ergebnislisten
-gelesen. Native "Suchauftrag"/Alert-Funktionen einzelner Portale (z.B. Kleinanzeigen,
-Technikbörse) werden bewusst NICHT genutzt, da diese ein Benutzerkonto voraussetzen.
+Landwirt.com und Mascus sind keine Bot-Schutz-Fälle, sondern reine JavaScript-Suchen - das lässt
+sich mit mehr Aufwand (z.B. per Headless-Browser) nachrüsten, siehe "Mögliche Erweiterungen".
 
 ## Ergebnisse ansehen
 
-`treffer.csv` in diesem Repo öffnen (z.B. mit Excel) - neueste Einträge stehen unten. Zusätzlich
-kommt bei jedem Fund automatisch eine E-Mail (siehe nächster Abschnitt).
+`treffer.csv` in diesem Ordner öffnen (z.B. mit Excel) - neueste Einträge stehen unten.
+Zusätzlich kommt bei jedem Fund automatisch eine E-Mail an **info@urny-handel.com**.
 
-## E-Mail-Benachrichtigung einrichten
+## Hintergrund: warum lokal statt Cloud?
 
-Sobald die Cloud-Routine neue Treffer in `treffer.csv` pusht, verschickt der GitHub-Actions-
-Workflow [`.github/workflows/email-benachrichtigung.yml`](.github/workflows/email-benachrichtigung.yml)
-automatisch eine E-Mail an **info@urny-handel.com** mit allen neuen Anzeigen (Titel, Preis, Ort,
-Datum, Link). Versendet wird über das Postfach **Microsoft 365 / Outlook** (smtp.office365.com).
+Ursprünglich lief das Ganze als geplante Cloud-Routine. Ein Testlauf hat gezeigt, dass die
+Cloud-Umgebung eine Netzwerk-Firewall hat, die den Zugriff auf so gut wie alle normalen Webseiten
+blockiert (nur wenige Entwickler-Domains wie github.com sind erlaubt) - alle sechs Portale wurden
+mit `EGRESS_BLOCKED` abgewiesen. Das lässt sich nicht umgehen, daher läuft die Suche jetzt lokal
+auf diesem Rechner, der normalen Internetzugang hat.
 
-**Einmalig einzurichten (nur du, nicht Claude - Zugangsdaten gehören nicht in den Chat):**
+## Mögliche Erweiterungen
 
-1. Auf github.com im Repo [Suchmaschine](https://github.com/Patrick8-75/Suchmaschine) zu
-   **Settings → Secrets and variables → Actions → New repository secret**
-2. Zwei Secrets anlegen:
-   - `SMTP_USERNAME` → deine vollständige Absender-E-Mail-Adresse (z.B. `info@urny-handel.com`)
-   - `SMTP_PASSWORD` → das Passwort dieses Postfachs. Falls Multi-Faktor-Authentifizierung aktiv
-     ist, brauchst du stattdessen ein **App-Passwort** (in Microsoft 365 unter
-     "Sicherheitsinfo" / "App-Passwörter" erstellbar - ggf. muss ein Admin das für den Tenant
-     freischalten).
-3. Fertig - kein weiterer Schritt nötig. Beim nächsten Fund testet sich der Versand von selbst;
-   bei Bedarf lässt sich der Workflow auch manuell unter dem Reiter "Actions" im Repo antriggern
-   (Push auf `treffer.csv` simulieren) um es vorher zu prüfen.
-
-Falls der Versand fehlschlägt (z.B. falsches Passwort, Tenant blockiert SMTP-Auth), zeigt der
-Actions-Tab im Repo den Fehler im Log an.
-
-## Offene Punkte / mögliche Erweiterungen
-
-- **URL-Muster:** Für eBay Kleinanzeigen und Maschinensucher sind die Such-URLs bereits
-  verifiziert (siehe `config/portale.json`). Bei Agriaffaires, Technikbörse, Landwirt.com und
-  Mascus ermittelt die Routine die Such-URL bei jedem Lauf selbst über das Suchfeld der jeweiligen
-  Startseite - falls ein Portal dabei mal nicht zuverlässig funktioniert, bitte Bescheid geben.
+- **Landwirt.com / Mascus per Headless-Browser:** Mit z.B. Playwright ließen sich auch diese
+  beiden JavaScript-Suchen automatisieren (kein Bot-Schutz, nur clientseitiges Rendering) -
+  bei Bedarf einfach Bescheid geben.
+- **Weitere Suchbegriffe/Marken** jederzeit in `config/suchbegriffe.json` ergänzbar.

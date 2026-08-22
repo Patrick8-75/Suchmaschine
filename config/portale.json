@@ -1,53 +1,41 @@
 {
-  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal ab, ohne den Eintrag zu löschen. 'suche_url_vorlage' enthält {suchbegriff} als Platzhalter (URL-kodiert einsetzen, Leerzeichen -> + oder -). Bereits verifiziert per Browser-Test am 22.08.2026: kleinanzeigen und maschinensucher. Bei den anderen Portalen soll der Agent die tatsächliche Such-URL beim Lauf selbst ermitteln (Suchfeld auf der Startseite benutzen bzw. bekanntes Muster versuchen) und diese Datei bei Bedarf aktualisieren.",
+  "_hinweis": "Portale, die durchsucht werden. 'aktiv': false schaltet ein Portal ab, ohne den Eintrag zu löschen. Status Stand 22.08.2026 (echte Tests mit Python/requests durchgeführt, siehe 'hinweis' je Portal).",
   "portale": [
     {
       "name": "eBay Kleinanzeigen",
       "basis_url": "https://www.kleinanzeigen.de",
-      "suche_url_vorlage": "https://www.kleinanzeigen.de/s-{suchbegriff}/k0",
-      "sortierung": "Standard-Suche ist bereits nach Neueste sortiert (sortingField=SORTING_DATE)",
       "aktiv": true,
-      "hinweis": "Kein Login/Suchauftrag verwenden (würde Kontoerstellung erfordern) - stattdessen direkt die öffentliche Ergebnisliste lesen."
+      "hinweis": "Funktioniert zuverlässig: öffentliche Suchergebnisseite (server-seitig gerendert), Standard-Sortierung ist bereits nach Neueste, kein Bot-Schutz festgestellt."
     },
     {
       "name": "Maschinensucher",
       "basis_url": "https://www.maschinensucher.de",
-      "suche_url_vorlage": "https://www.maschinensucher.de/main/search/index?search-word={suchbegriff}&sort-field=eintragsdatum&sort-direction=desc",
-      "sortierung": "sort-field=eintragsdatum&sort-direction=desc",
       "aktiv": true,
-      "hinweis": ""
+      "hinweis": "Funktioniert zuverlässig: öffentliche Suchergebnisseite (server-seitig gerendert), sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz festgestellt. Eher Baumaschinen-lastig, für Landmaschinen ggf. wenige/keine Treffer."
     },
     {
       "name": "Agriaffaires",
       "basis_url": "https://www.agriaffaires.de",
-      "suche_url_vorlage": "",
-      "sortierung": "beim Lauf ermitteln (nach Datum/Neueste sortieren, falls Option vorhanden)",
-      "aktiv": true,
-      "hinweis": "URL-Muster noch nicht verifiziert - Agent soll die Suche über das Suchfeld auf agriaffaires.de nutzen und die passende URL herausfinden."
+      "aktiv": false,
+      "hinweis": "NICHT automatisierbar: Seite ist durch DataDome-Captcha geschützt (geo.captcha-delivery.com). Automatisiertes Umgehen von Bot-/Captcha-Schutz ist nicht zulässig. Manuell im Browser weiter durchsuchbar."
     },
     {
       "name": "Technikbörse",
       "basis_url": "https://www.technikboerse.com",
-      "suche_url_vorlage": "",
-      "sortierung": "beim Lauf ermitteln",
-      "aktiv": true,
-      "hinweis": "Hat eigene 'Suchaufträge'-Funktion, aber die erfordert ein Konto - stattdessen öffentliche Ergebnisliste über das Suchfeld nutzen."
+      "aktiv": false,
+      "hinweis": "NICHT automatisierbar: Suchanfrage per Skript wird explizit als 'User-Agent spoofing detected' geblockt (aktive Bot-Erkennung). Manuell im Browser weiter durchsuchbar; hat auch einen eigenen 'Suchauftrag' (setzt Konto voraus, daher hier nicht genutzt)."
     },
     {
       "name": "Landwirt.com",
       "basis_url": "https://www.landwirt.com",
-      "suche_url_vorlage": "",
-      "sortierung": "beim Lauf ermitteln",
-      "aktiv": true,
-      "hinweis": ""
+      "aktiv": false,
+      "hinweis": "Aktuell nicht unterstützt: Die Kleinanzeigen-Suche läuft clientseitig (JavaScript) - ein einfacher HTTP-Abruf liefert nur die ungefilterte allgemeine Anzeigenliste, keine echten Suchtreffer. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
     },
     {
       "name": "Mascus",
       "basis_url": "https://www.mascus.de",
-      "suche_url_vorlage": "",
-      "sortierung": "beim Lauf ermitteln",
-      "aktiv": true,
-      "hinweis": ""
+      "aktiv": false,
+      "hinweis": "Aktuell nicht unterstützt: Suchergebnisse werden clientseitig (JavaScript) nachgeladen, im per HTTP abgerufenen HTML sind keine Anzeigen enthalten. Würde einen echten (Headless-)Browser erfordern - kein Bot-Schutz, nur technischer Mehraufwand. Kandidat für spätere Erweiterung."
     }
   ]
 }
