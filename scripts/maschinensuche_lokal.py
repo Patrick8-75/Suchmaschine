@@ -282,7 +282,23 @@ def passt_wirklich_zum_suchbegriff(titel: str, suchbegriff: str) -> bool:
     return all(w in titel_norm for w in woerter)
 
 
-def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], ausschluesse: list[str]) -> list[dict]:
+def erfuellt_zusatzfilter(titel: str, erfordert_eines_von: list[str] | None) -> bool:
+    """Bei breiten Markensuchen (z.B. nur 'Claas' statt 'Claas Conspeed') muss zusätzlich
+    mindestens eines der in 'erfordert_eines_von' hinterlegten Wörter im Titel stehen,
+    damit nicht jede beliebige Anzeige der Marke durchrutscht (Traktoren, Mähdrescher, ...)."""
+    if not erfordert_eines_von:
+        return True
+    titel_klein = titel.lower()
+    return any(wort.lower() in titel_klein for wort in erfordert_eines_von)
+
+
+def hole_neue_treffer(
+    portal_name: str,
+    suchbegriff: str,
+    gesehen: set[str],
+    ausschluesse: list[str],
+    erfordert_eines_von: list[str] | None = None,
+) -> list[dict]:
     scraper = SCRAPER.get(portal_name)
     if scraper is None:
         log.info("Portal '%s' hat (noch) keinen lokalen Scraper - übersprungen.", portal_name)
@@ -296,6 +312,8 @@ def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], aus
     neue = []
     for t in rohtreffer:
         if not passt_wirklich_zum_suchbegriff(t["titel"], suchbegriff):
+            continue
+        if not erfuellt_zusatzfilter(t["titel"], erfordert_eines_von):
             continue
         if gehoert_zu_ausschluss(t["titel"], ausschluesse):
             continue
@@ -412,7 +430,7 @@ def main() -> None:
         ]
         for eintrag in passende_suchbegriffe:
             suchbegriff = eintrag["begriff"]
-            neue = hole_neue_treffer(name, suchbegriff, gesehen, ausschluesse)
+            neue = hole_neue_treffer(name, suchbegriff, gesehen, ausschluesse, eintrag.get("erfordert_eines_von"))
             for t in neue:
                 alle_neuen_zeilen.append(
                     {

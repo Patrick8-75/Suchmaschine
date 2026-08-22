@@ -42,10 +42,19 @@ an - ein Eintrag pro Begriff mit `begriff` (Suchtext), `gruppe` (`Landmaschine` 
 Fehltreffer aus. Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern,
 der nächste geplante Lauf verwendet automatisch die neue Liste.
 
-**Ersatzteile werden grundsätzlich nicht gemeldet** (Nutzerentscheidung) - `ist_ersatzteil()` in
-`scripts/maschinensuche_lokal.py` erkennt gängige Ersatzteil-Bezeichnungen (Gummikette,
-Laufrolle, Hydraulikpumpe, Fahrantrieb usw.) und filtert sie schon beim Suchlauf raus, bevor sie
-in `treffer.csv` landen.
+**Ersatzteile/Verschleißteile werden grundsätzlich nicht gemeldet** (Nutzerentscheidung) -
+`ist_ersatzteil()` in `scripts/maschinensuche_lokal.py` erkennt gängige Bezeichnungen (Gummikette,
+Laufrolle, Hydraulikpumpe, Fahrantrieb, Getriebe, Achse, Dichtung usw.) und filtert sie schon
+beim Suchlauf raus, bevor sie in `treffer.csv` landen. Ebenso ausgeschlossen: Spielzeug/Modelle
+(`ausschluesse.global`, z.B. "1:32", "Bruder").
+
+**Wichtiger Grundsatz für neue Suchbegriffe (Nutzervorgabe 22.08.2026):** Immer **Hersteller +
+Maschinentyp/Modell kombinieren** (z.B. `"Claas Conspeed"`, `"Takeuchi TB 145"`), nie nur die
+Marke allein (`"Claas"`) - ein Test hat gezeigt, dass eine reine Markensuche bei einem
+verbreiteten Hersteller wie Claas komplett von Traktoren, Spielzeug und Ersatzteilen überflutet
+wird und die eigentlich gesuchte Nische (Maispflücker) auf Seite 1 der Ergebnisse gar nicht mehr
+auftaucht. Braucht ein Hersteller mehrere Modell-/Produktlinien (z.B. Claas Conspeed UND Corio),
+lieber mehrere gezielte Einträge anlegen statt einen breiten.
 
 ## Portale - aktueller Stand
 

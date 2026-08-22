@@ -1,13 +1,14 @@
 {
-  "_hinweis": "Liste der Maschinentypen/Suchbegriffe, nach denen mehrmals täglich gesucht wird. 'gruppe' bestimmt, welche Portale mitsuchen (siehe config/portale.json 'gruppen') - 'Landmaschine' und 'Baumaschine' sind aktuell die zwei genutzten Gruppen, aber frei wählbar. 'hersteller' wird im Radar zur Differenzierung innerhalb eines Maschinentyps verwendet (z.B. mehrere Hersteller unter 'Minibagger'). Einfach Einträge hinzufügen, ändern oder löschen - keine Programmierkenntnisse nötig.",
+  "_hinweis": "Liste der Maschinentypen/Suchbegriffe, nach denen mehrmals täglich gesucht wird. 'gruppe' bestimmt, welche Portale mitsuchen (siehe config/portale.json 'gruppen') - 'Landmaschine' und 'Baumaschine' sind aktuell die zwei genutzten Gruppen, aber frei wählbar. 'hersteller' wird im Radar zur Differenzierung innerhalb eines Maschinentyps verwendet. 'erfordert_eines_von' ist optional: bei breiten Markensuchen muss zusätzlich mindestens eines dieser Wörter im Titel stehen. Einfach Einträge hinzufügen, ändern oder löschen - keine Programmierkenntnisse nötig.",
   "suchbegriffe": [
-    {"begriff": "Claas Conspeed", "gruppe": "Landmaschine", "beschreibung": "Maispflücker / Erntevorsatz", "hersteller": "Claas"},
-    {"begriff": "Geringhoff", "gruppe": "Landmaschine", "beschreibung": "Maispflücker / Erntevorsatz", "hersteller": "Geringhoff"},
+    {"begriff": "Claas Conspeed", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas"},
+    {"begriff": "Claas Corio", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Claas"},
+    {"begriff": "Geringhoff", "gruppe": "Landmaschine", "beschreibung": "Maispflücker", "hersteller": "Geringhoff"},
     {"begriff": "Takeuchi TB 145", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi"},
     {"begriff": "Takeuchi TB 175", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi"}
   ],
   "ausschluesse": {
     "_hinweis": "Optional: Wörter, die in Anzeigen NICHT vorkommen dürfen, damit sie trotz Treffer beim Suchbegriff nicht gemeldet werden (z.B. Spielzeug/Ersatzteile aussortieren).",
-    "global": ["Spielzeug", "Modell 1:32", "Ersatzteil", "defekt"]
+    "global": ["Spielzeug", "1:32", "1:16", "1:87", "Bruder", "Ersatzteil", "defekt"]
   }
 }
