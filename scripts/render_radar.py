@@ -31,7 +31,10 @@ ANZEIGE_FENSTER = timedelta(hours=24)
 
 
 def parse_preis_eur(preis: str) -> float | None:
-    m = re.search(r"(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*(?:€|EUR)\b", preis)
+    # (?!\w) statt \b: \b matcht nach "€" nicht (€ ist kein Wortzeichen, und am
+    # Stringende gibt es dann keine Wortgrenze) - dadurch wurden bisher ALLE
+    # Preise mit "€"-Symbol (statt "EUR") faelschlich als nicht erkennbar behandelt.
+    m = re.search(r"(\d{1,3}(?:\.\d{3})*(?:,\d+)?)\s*(?:€|EUR)(?!\w)", preis)
     if not m:
         return None
     try:
