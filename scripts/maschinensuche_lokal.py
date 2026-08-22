@@ -162,6 +162,16 @@ def gehoert_zu_ausschluss(titel: str, ausschluesse: list[str]) -> bool:
     return any(wort.lower() in titel_klein for wort in ausschluesse)
 
 
+def passt_wirklich_zum_suchbegriff(titel: str, suchbegriff: str) -> bool:
+    """Manche Portale (z.B. Maschinensucher) suchen unscharf ('enthält irgendeins
+    der Wörter') statt nach der genauen Phrase. Hier alle Wörter des Suchbegriffs
+    verlangen, damit z.B. bei 'Claas Conspeed' nicht jede beliebige Claas-Anzeige
+    durchrutscht."""
+    titel_klein = titel.lower()
+    woerter = [w for w in re.split(r"\s+", suchbegriff.lower()) if w]
+    return all(w in titel_klein for w in woerter)
+
+
 def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], ausschluesse: list[str]) -> list[dict]:
     scraper = SCRAPER.get(portal_name)
     if scraper is None:
@@ -175,6 +185,8 @@ def hole_neue_treffer(portal_name: str, suchbegriff: str, gesehen: set[str], aus
 
     neue = []
     for t in rohtreffer:
+        if not passt_wirklich_zum_suchbegriff(t["titel"], suchbegriff):
+            continue
         if gehoert_zu_ausschluss(t["titel"], ausschluesse):
             continue
         if t["id"] in gesehen:
