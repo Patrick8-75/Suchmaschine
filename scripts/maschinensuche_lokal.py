@@ -4,8 +4,7 @@ Maschinensuche P.Urny Handel - lokaler Suchlauf.
 Durchsucht die aktiven Portale (config/portale.json) nach den hinterlegten
 Suchbegriffen (config/suchbegriffe.json), vergleicht Treffer gegen bereits
 gemeldete Anzeigen (state/gesehene_anzeigen.json) und trägt neue Treffer in
-treffer.csv ein. Verschickt bei neuen Treffern eine E-Mail (SMTP-Zugangsdaten
-kommen aus dem Windows Credential Manager, siehe setup_email_zugangsdaten.py).
+treffer.csv ein.
 
 Wird von der Windows-Aufgabenplanung mehrmals täglich aufgerufen
 (siehe register_task.ps1). Manueller Aufruf zum Testen:
@@ -18,11 +17,9 @@ import csv
 import json
 import logging
 import re
-import smtplib
 import sys
 import urllib.parse
 from datetime import datetime, timezone
-from email.mime.text import MIMEText
 from pathlib import Path
 
 import requests
@@ -44,8 +41,6 @@ USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 )
-
-KEYRING_SERVICE = "purny-handel-maschinensuche-smtp"
 
 LOG_DATEI.parent.mkdir(exist_ok=True)
 logging.basicConfig(
@@ -474,54 +469,6 @@ def haenge_an_csv_an(zeilen: list[dict]) -> None:
             )
 
 
-def sende_email(neue_zeilen: list[dict]) -> None:
-    try:
-        import keyring
-    except ImportError:
-        log.warning("Paket 'keyring' nicht installiert - E-Mail-Versand übersprungen.")
-        return
-
-    benutzer = keyring.get_password(KEYRING_SERVICE, "smtp_username")
-    passwort = keyring.get_password(KEYRING_SERVICE, "smtp_password")
-    if not benutzer or not passwort:
-        log.info(
-            "Keine SMTP-Zugangsdaten im Windows Credential Manager hinterlegt "
-            "(einmalig python scripts/setup_email_zugangsdaten.py ausführen) - E-Mail-Versand übersprungen."
-        )
-        return
-
-    empfaenger = "info@urny-handel.com"
-    betreff = f"{len(neue_zeilen)} neue Maschinenangebote - P.Urny Handel"
-    def _zeile(z: dict) -> str:
-        zusatz = " | ".join(
-            f"{label}: {z[feld]}" for feld, label in (("baujahr", "Baujahr"), ("betriebsstunden", "Bstd."))
-            if z.get(feld)
-        )
-        zusatz_zeile = f" | {zusatz}" if zusatz else ""
-        return (
-            f"- [{z['portal']}] {z['titel']}\n"
-            f"  Suchbegriff: {z['suchbegriff']} | Preis: {z['preis']} | Ort: {z['ort']}{zusatz_zeile}\n"
-            f"  {z['url']}"
-        )
-
-    zeilen_text = "\n\n".join(_zeile(z) for z in neue_zeilen)
-    body = f"{len(neue_zeilen)} neue Anzeige(n) gefunden:\n\n{zeilen_text}\n"
-
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"] = betreff
-    msg["From"] = benutzer
-    msg["To"] = empfaenger
-
-    try:
-        with smtplib.SMTP("smtp.office365.com", 587, timeout=30) as server:
-            server.starttls()
-            server.login(benutzer, passwort)
-            server.sendmail(benutzer, [empfaenger], msg.as_string())
-        log.info("E-Mail mit %d neuen Treffern an %s verschickt.", len(neue_zeilen), empfaenger)
-    except Exception as exc:
-        log.error("E-Mail-Versand fehlgeschlagen: %s", exc)
-
-
 def git_commit_und_push() -> None:
     import subprocess
 
@@ -598,7 +545,6 @@ def main() -> None:
     if alle_neuen_zeilen:
         haenge_an_csv_an(alle_neuen_zeilen)
         speichere_json(STATE_DATEI, state)
-        sende_email(alle_neuen_zeilen)
         git_commit_und_push()
     else:
         log.info("Keine neuen Treffer in diesem Lauf.")

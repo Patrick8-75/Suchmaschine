@@ -3,9 +3,8 @@
 Durchsucht mehrmals täglich automatisch mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu
 den in `config/suchbegriffe.json` hinterlegten Maschinentypen. Bei neuen Treffern wird
 1. `treffer.csv` ergänzt (komplette Historie, nie gelöscht),
-2. eine E-Mail an info@urny-handel.com verschickt,
-3. das Artifact **[Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
-4. eine Push-Benachrichtigung an Patrick geschickt.
+2. das Artifact **[Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
+3. eine Push-Benachrichtigung an Patrick geschickt.
 
 Läuft **lokal auf diesem Rechner** (siehe "Hintergrund" unten für den Grund) über eine
 **geplante Claude-Code-Aufgabe** namens `maschinensuche-radar` (alle 2h, 7-21 Uhr) - keine
@@ -19,12 +18,7 @@ Start nach).
    ```
    pip install -r requirements.txt
    ```
-2. SMTP-Zugangsdaten für die E-Mail-Benachrichtigung hinterlegen (Passwort landet sicher im
-   Windows Credential Manager, nicht in einer Datei):
-   ```
-   python scripts/setup_email_zugangsdaten.py
-   ```
-3. Testlauf von Hand:
+2. Testlauf von Hand:
    ```
    python scripts/maschinensuche_lokal.py
    python scripts/render_radar.py
