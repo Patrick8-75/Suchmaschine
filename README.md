@@ -93,7 +93,6 @@ bleibt nur die manuelle Suche im Browser.
 
 - **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639) - wird automatisch nach jedem Lauf aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h automatisch raus.
 - **Komplette Historie:** `treffer.csv` in diesem Ordner (z.B. mit Excel öffnen) - wird nie gelöscht.
-- **E-Mail:** bei jedem neuen Treffer automatisch an **info@urny-handel.com**.
 - **Push-Benachrichtigung:** bei jedem neuen Treffer, solange die Claude-Code-App läuft.
 
 ## Hintergrund: warum lokal statt Cloud?
