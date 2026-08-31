@@ -9,7 +9,8 @@
     {"begriff": "Takeuchi TB 230", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 230"},
     {"begriff": "Takeuchi TB 250", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 250"},
     {"begriff": "Takeuchi TB 260", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 260"},
-    {"begriff": "Takeuchi TB 290", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 290"}
+    {"begriff": "Takeuchi TB 290", "gruppe": "Baumaschine", "beschreibung": "Minibagger", "hersteller": "Takeuchi", "typ": "TB 290"},
+    {"begriff": "Komatsu PC210", "gruppe": "Baumaschine", "beschreibung": "Kettenbagger", "hersteller": "Komatsu", "typ": "PC210"}
   ],
   "ausschluesse": {
     "_hinweis": "Optional: Wörter, die in Anzeigen NICHT vorkommen dürfen, damit sie trotz Treffer beim Suchbegriff nicht gemeldet werden (z.B. Spielzeug/Ersatzteile aussortieren).",
