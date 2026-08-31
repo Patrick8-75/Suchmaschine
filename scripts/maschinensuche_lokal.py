@@ -341,13 +341,16 @@ def gehoert_zu_ausschluss(titel: str, ausschluesse: list[str]) -> bool:
 # Maschine!"). Bewusst mehrteilige/eindeutige Begriffe, damit z.B. "Kettenbagger" nicht wegen
 # "Kette" fälschlich rausfliegt, und KEINE Begriffe wie "Schneidwerk"/"Pflücker"/"Vorsatz", die
 # selbst komplette, gesuchte Anbaugeräte bezeichnen (z.B. Claas Conspeed/Geringhoff sind
-# Erntevorsätze - die sollen ja gerade gefunden werden).
+# Erntevorsätze - die sollen ja gerade gefunden werden). Aus dem gleichen Grund stehen hier
+# "tieflöffel"/"baggerlöffel" statt eines pauschalen "löffel": komplette Bagger werden oft
+# mitsamt Löffel angeboten ("Powertilt+Löffel nur 1957h") und dürfen nicht rausfallen.
 ERSATZTEIL_BEGRIFFE = [
     "ersatzteil", "verschleißteil", "verschleissteil", "gummikette", "laufrolle", "tragrolle",
     "stützrolle", "spannrolle", "leitrad", "kettenrad", "antriebsrad", "fahrantrieb", "fahrmotor",
     "endantrieb", "finale drive", "hydraulikpumpe", "zahnradpumpe", "vorsteuergerät", "türschloss",
     "türverriegelung", "türe kpl", "sitzpolster", "sitzkissen", "löffelbolzen", "reparatursatz",
-    "for parts", "radsatz", "breitreifen", "schnellwechsler", "kettenlaufwerksrolle",
+    "for parts", "radsatz", "breitreifen", "wechsler", "kettenlaufwerksrolle",
+    "tieflöffel", "tiefloeffel", "baggerlöffel", "baggerloeffel", "lichtmaschine",
     "buchsen/bolzen", "roata de ghidaj", "rola intinzatoare", "role de rulare", "senila pentru",
     "kettenlaufrolle", "winkelgetriebe", "getriebe", "pflückeinheit", "häckslerarm",
     "keilriemen", "zahnriemen", "dichtung", "bremsbelag", "kupplung", "hydraulikschlauch",
