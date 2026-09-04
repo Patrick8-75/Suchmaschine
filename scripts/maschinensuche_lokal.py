@@ -34,6 +34,8 @@ CONFIG_PORTALE = PROJEKT_ROOT / "config" / "portale.json"
 STATE_DATEI = PROJEKT_ROOT / "state" / "gesehene_anzeigen.json"
 TREFFER_CSV = PROJEKT_ROOT / "treffer.csv"
 LOG_DATEI = PROJEKT_ROOT / "logs" / "lauf.log"
+SPERR_DATEI = PROJEKT_ROOT / "state" / "suchlauf.lock"
+SPERRE_MAX_ALTER_S = 30 * 60  # verwaiste Sperre (Absturz) nach 30 min ignorieren
 
 MAX_IDS_PRO_PORTAL = 5000
 HTTP_TIMEOUT = 20
@@ -456,6 +458,40 @@ def hole_neue_treffer(
     return neue
 
 
+def sperre_setzen() -> bool:
+    """Legt die Sperrdatei an. False, wenn bereits ein Lauf aktiv ist.
+
+    Hintergrund (04.09.2026): Drei innerhalb von 38 s gestartete Laeufe haben
+    dieselben Anzeigen je dreimal in treffer.csv eingetragen, weil der State
+    erst am Laufende geschrieben wird. Die Sperre verhindert Parallellaeufe;
+    eine verwaiste Sperre (Absturz, Stromausfall) wird nach 30 min ignoriert.
+    """
+    import os
+    import time
+
+    if SPERR_DATEI.exists():
+        alter = time.time() - SPERR_DATEI.stat().st_mtime
+        if alter < SPERRE_MAX_ALTER_S:
+            return False
+        log.warning("Verwaiste Sperrdatei (%.0f min alt) wird ersetzt.", alter / 60)
+        SPERR_DATEI.unlink(missing_ok=True)
+    SPERR_DATEI.parent.mkdir(exist_ok=True)
+    SPERR_DATEI.write_text(f"pid={os.getpid()}\n", encoding="utf-8")
+    return True
+
+
+def sperre_freigeben() -> None:
+    SPERR_DATEI.unlink(missing_ok=True)
+
+
+def bereits_erfasste_urls() -> set[str]:
+    """URLs, die schon in treffer.csv stehen - zweites Netz gegen Dubletten."""
+    if not TREFFER_CSV.exists():
+        return set()
+    with open(TREFFER_CSV, newline="", encoding="utf-8-sig") as f:
+        return {z["url"] for z in csv.DictReader(f) if z.get("url")}
+
+
 def haenge_an_csv_an(zeilen: list[dict]) -> None:
     neu_anlegen = not TREFFER_CSV.exists()
     with open(TREFFER_CSV, "a", newline="", encoding="utf-8-sig") as f:
@@ -495,6 +531,16 @@ def git_commit_und_push() -> None:
 
 def main() -> None:
     LOG_DATEI.parent.mkdir(exist_ok=True)
+    if not sperre_setzen():
+        log.info("Suchlauf uebersprungen: es laeuft bereits ein anderer (state/suchlauf.lock).")
+        return
+    try:
+        _suchlauf()
+    finally:
+        sperre_freigeben()
+
+
+def _suchlauf() -> None:
     log.info("=== Suchlauf gestartet ===")
 
     suchbegriffe_cfg = lade_json(CONFIG_SUCHBEGRIFFE)
@@ -506,6 +552,7 @@ def main() -> None:
     ausschluesse = suchbegriffe_cfg.get("ausschluesse", {}).get("global", [])
 
     jetzt = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    schon_in_csv = bereits_erfasste_urls()
     alle_neuen_zeilen = []
     zusammenfassung = []
 
@@ -524,6 +571,13 @@ def main() -> None:
             suchbegriff = eintrag["begriff"]
             neue = hole_neue_treffer(name, suchbegriff, gesehen, ausschluesse, eintrag.get("erfordert_eines_von"))
             for t in neue:
+                if t["url"] in schon_in_csv:
+                    # Anzeige steht schon in treffer.csv (z.B. ueber ein
+                    # Schwesterportal oder einen frueheren Lauf) - nur als
+                    # gesehen markieren, nicht erneut eintragen.
+                    gesehen.add(t["id"])
+                    continue
+                schon_in_csv.add(t["url"])
                 alle_neuen_zeilen.append(
                     {
                         "gefunden_am": jetzt,

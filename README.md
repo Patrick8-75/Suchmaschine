@@ -1,31 +1,35 @@
 # Maschinensuche P.Urny Handel
 
-Durchsucht mehrmals täglich automatisch mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu
-den in `config/suchbegriffe.json` hinterlegten Maschinentypen. Bei neuen Treffern wird
+Durchsucht mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu den in
+`config/suchbegriffe.json` hinterlegten Maschinentypen. Bei neuen Treffern wird
 1. `treffer.csv` ergänzt (komplette Historie, nie gelöscht),
 2. das Artifact **[Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
 3. eine Push-Benachrichtigung an Patrick geschickt.
 
-Läuft **lokal auf diesem Rechner** (siehe "Hintergrund" unten für den Grund) über eine
-**geplante Claude-Code-Aufgabe** namens `maschinensuche-radar` (alle 2h, 7-21 Uhr) - keine
-Windows-Aufgabenplanung mehr nötig. Einzige Voraussetzung: **die Claude-Code-App muss offen
-sein**, damit die Aufgabe pünktlich feuert (ist die App zu, holt sie den Lauf beim nächsten
-Start nach).
+## Wird manuell gestartet
 
-## Einmaliges Setup
+**Seit dem 04.09.2026 läuft nichts mehr automatisch** (Entscheidung Patrick). Die früheren
+zwei Scheduler - eine Windows-Aufgabe und ein geplanter Claude-Task `maschinensuche-radar` -
+sind abgeschafft; der letzte automatische Lauf war am 03.09.2026 um 20:22. Lücken in
+`treffer.csv` zwischen diesem Datum und dem nächsten Handstart sind also normal und kein
+Defekt.
 
-1. Python-Pakete installieren:
-   ```
-   pip install -r requirements.txt
-   ```
-2. Testlauf von Hand:
+Ablauf eines Laufs:
+
+1. Einmalig, falls noch nicht geschehen: `pip install -r requirements.txt`
+2. Suchen und Radar bauen:
    ```
    python scripts/maschinensuche_lokal.py
    python scripts/render_radar.py
    ```
+3. Claude sagen: **START** - dann aktualisiert Claude das Radar-Artifact (siehe Hinweis unten)
+   und meldet die neuen Treffer. Wer nur "START" schreibt, bekommt auch die Schritte 1-2
+   miterledigt.
 
-Die geplante Aufgabe `maschinensuche-radar` ist bereits eingerichtet (in Claude Code unter
-"Scheduled" sichtbar) und braucht keine weitere Einrichtung.
+**Zum Artifact-Update:** Der Publish scheitert beim ersten Versuch regelmäßig mit "You hadn't
+viewed the live version of this artifact". Das ist der Normalfall. Lösung: die Artifact-URL
+erst mit `action: "read"` lesen (dabei die gespeicherte Datei wirklich vollständig lesen),
+danach publizieren. `force: true` nur nach ausdrücklicher Rückfrage.
 
 ## Wie du Maschinentypen änderst
 
@@ -34,7 +38,7 @@ an - ein Eintrag pro Begriff mit `begriff` (Suchtext), `gruppe` (`Landmaschine` 
 `Baumaschine` - steuert, welche Portale mitsuchen) und `beschreibung` (Maschinentyp, wird als
 Überschrift im Radar verwendet). Wörter unter `ausschluesse.global` sortieren zusätzliche
 Fehltreffer aus. Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern,
-der nächste geplante Lauf verwendet automatisch die neue Liste.
+der nächste Lauf verwendet dann die neue Liste.
 
 **Ersatzteile/Verschleißteile werden grundsätzlich nicht gemeldet** (Nutzerentscheidung) -
 `ist_ersatzteil()` in `scripts/maschinensuche_lokal.py` erkennt gängige Bezeichnungen (Gummikette,
@@ -91,9 +95,9 @@ bleibt nur die manuelle Suche im Browser.
 
 ## Ergebnisse ansehen
 
-- **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639) - wird automatisch nach jedem Lauf aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h automatisch raus.
+- **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639) - wird bei jedem Handstart aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h raus.
 - **Komplette Historie:** `treffer.csv` in diesem Ordner (z.B. mit Excel öffnen) - wird nie gelöscht.
-- **Push-Benachrichtigung:** bei jedem neuen Treffer, solange die Claude-Code-App läuft.
+- **Push-Benachrichtigung:** bei neuen Treffern am Ende eines Laufs.
 
 ## Hintergrund: warum lokal statt Cloud?
 
