@@ -12,29 +12,37 @@
       "name": "Maschinensucher",
       "basis_url": "https://www.maschinensucher.de",
       "aktiv": true,
-      "gruppen": ["Baumaschine"],
+      "gruppen": [
+        "Baumaschine"
+      ],
       "hinweis": "Auf die Gruppe 'Baumaschine' beschränkt - dediziertes Baumaschinenportal, für Landmaschinen (Claas Conspeed/Geringhoff) nicht relevant genug. Funktioniert zuverlässig: server-seitig gerendert, sort-field=eintragsdatum&sort-direction=desc liefert Neueste zuerst, kein Bot-Schutz. Echte Takeuchi-TB145/TB175-Treffer bestätigt."
     },
     {
       "name": "Machinerypark",
       "basis_url": "https://de.machinerypark.com",
       "aktiv": true,
-      "gruppen": ["Baumaschine"],
+      "gruppen": [
+        "Baumaschine"
+      ],
       "hinweis": "Funktioniert zuverlässig: GET /suchen?search=<begriff>&result=true liefert echte, gefilterte Treffer mit Preis/Ort/Baujahr. Kein Bot-Schutz festgestellt."
     },
     {
       "name": "Machineryline",
       "basis_url": "https://machineryline.de",
       "aktiv": true,
-      "gruppen": ["Baumaschine"],
+      "gruppen": [
+        "Baumaschine"
+      ],
       "hinweis": "Internationale Maschinenbörse, GET /search_text.php?query=<begriff> liefert echte Treffer (auch aus dem Ausland). Kein Bot-Schutz festgestellt."
     },
     {
       "name": "Autoline",
       "basis_url": "https://autoline.de",
-      "aktiv": false,
-      "gruppen": ["Baumaschine"],
-      "hinweis": "Deaktiviert (Nutzerentscheidung, nicht wegen technischer Probleme): läuft auf derselben Plattform wie Machineryline, 19 von 28 Treffern waren im Test identisch - würde nur Duplikate erzeugen. Technisch funktionsfähig, GET /search_text.php?query=<begriff> - bei Bedarf jederzeit mit 'aktiv': true reaktivierbar."
+      "aktiv": true,
+      "gruppen": [
+        "Baumaschine"
+      ],
+      "hinweis": "Auf Nutzerwunsch am 06.09.2026 wieder aktiviert. Laeuft auf derselben Plattform wie Machineryline, im Test vom 22.08. waren 19 von 28 Treffern identisch - es ist also mit Doppelmeldungen derselben Maschine zu rechnen (verschiedene URLs, daher keine technischen Dubletten). GET /search_text.php?query=<begriff>."
     },
     {
       "name": "tec24",
@@ -42,6 +50,13 @@
       "aktiv": true,
       "gruppen": [],
       "hinweis": "Auf Nutzerhinweis (22.08.2026) geprüft und hinzugefügt. Funktioniert zuverlässig: GET /suchergebnis.php?typ=<begriff>&ft_search=1&rewriting=none liefert echte, gefilterte Treffer für Land- und Baumaschinen. Zeigt oft Brutto- UND Nettopreis getrennt an - wir übernehmen bevorzugt den Nettopreis. Kein Bot-Schutz festgestellt."
+    },
+    {
+      "name": "Mascus",
+      "basis_url": "https://www.mascus.de",
+      "aktiv": true,
+      "gruppen": [],
+      "hinweis": "Am 06.09.2026 auf Nutzerwunsch neu erschlossen. Frueher als 'nur JS-Suche' verworfen - die Suchseite liefert tatsaechlich kein HTML mit Treffern, aber die Next.js-Datenroute /_next/data/<buildId>/search.json?freetext=<begriff> gibt sauberes JSON mit allen Feldern zurueck (Marke, Modell, Baujahr, Betriebsstunden, Preis in EUR, Ort, Eintragsdatum). Kein Bot-Schutz. Die buildId wechselt bei jedem Mascus-Deployment und wird deshalb pro Lauf frisch von der Startseite gelesen. Sortierung nur aufsteigend moeglich, daher liest der Scraper die letzte Seite. Deckt Land- UND Baumaschinen ab - liefert als eines von nur drei Portalen auch Geringhoff/Claas-Treffer."
     }
   ]
 }

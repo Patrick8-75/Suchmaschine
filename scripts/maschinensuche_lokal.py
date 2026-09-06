@@ -321,6 +321,82 @@ def fetch_tec24(suchbegriff: str) -> list[dict]:
 
 # Portalname -> Scraper-Funktion. Nur hier eintragen, was tatsächlich funktioniert
 # (siehe config/portale.json "hinweis" für den Status der übrigen Portale).
+# Mascus liefert seine Suchergebnisse nicht im HTML, sondern ueber die Next.js-Datenroute
+# /_next/data/<buildId>/search.json. Die buildId aendert sich bei jedem Mascus-Deployment,
+# deshalb wird sie einmal pro Lauf frisch von der Startseite geholt und gecacht.
+_MASCUS_BUILD_ID: str | None = None
+
+
+def _mascus_build_id() -> str:
+    global _MASCUS_BUILD_ID
+    if _MASCUS_BUILD_ID is None:
+        r = requests.get(
+            "https://www.mascus.de/", headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT
+        )
+        r.raise_for_status()
+        treffer = re.search(r'"buildId":"([^"]+)"', r.text)
+        if not treffer:
+            raise RuntimeError("Mascus: buildId nicht in der Startseite gefunden")
+        _MASCUS_BUILD_ID = treffer.group(1)
+    return _MASCUS_BUILD_ID
+
+
+def _mascus_seite(suchbegriff: str, seite: int) -> dict:
+    r = requests.get(
+        f"https://www.mascus.de/_next/data/{_mascus_build_id()}/search.json",
+        params={"freetext": suchbegriff, "sortby": "createdate", "page": seite},
+        headers={"User-Agent": USER_AGENT},
+        timeout=HTTP_TIMEOUT,
+    )
+    r.raise_for_status()
+    return r.json()["pageProps"]["searchRes"]["searchData"]
+
+
+def fetch_mascus(suchbegriff: str) -> list[dict]:
+    # Mascus sortiert nur AUFSTEIGEND nach Eintragsdatum (sortby=createdate); eine
+    # absteigende Variante gibt es nicht und pagesize ist bei 40 gedeckelt. Statt alle
+    # Seiten zu holen (bei "Komatsu PC210" waeren das 11), lesen wir die LETZTE Seite -
+    # dort stehen bei aufsteigender Sortierung die neuesten Inserate. Die vorletzte kommt
+    # dazu, damit an der Seitengrenze nichts verlorengeht.
+    erste = _mascus_seite(suchbegriff, 1)
+    gesamt = erste.get("totalResults", 0)
+    letzte_seite = max(1, -(-gesamt // 40))
+
+    if letzte_seite == 1:
+        rohdaten = erste.get("items", [])
+    else:
+        rohdaten = _mascus_seite(suchbegriff, letzte_seite).get("items", [])
+        if letzte_seite > 2:
+            rohdaten = _mascus_seite(suchbegriff, letzte_seite - 1).get("items", []) + rohdaten
+
+    treffer = []
+    for item in rohdaten:
+        asset_url = item.get("assetUrl") or ""
+        if not asset_url:
+            continue
+        titel = " ".join(x for x in (item.get("brand"), item.get("model")) if x).strip()
+        preis_eur = item.get("priceEURO")
+        preis = f"{preis_eur:,.0f} EUR".replace(",", ".") if preis_eur else ""
+        ort = ", ".join(
+            x for x in (item.get("locationCountryCode"), item.get("locationCity")) if x
+        )
+        stunden = item.get("meterReadout")
+        einheit = item.get("meterReadoutUnit") or "h"
+        treffer.append(
+            {
+                "id": item.get("productId") or asset_url,
+                "titel": titel,
+                "preis": preis,
+                "ort": ort,
+                "inserat_datum": (item.get("createDate") or "")[:10],
+                "baujahr": str(item.get("yearOfManufacture") or ""),
+                "betriebsstunden": f"{stunden} {einheit}" if stunden else "",
+                "url": "https://www.mascus.de" + asset_url,
+            }
+        )
+    return treffer
+
+
 SCRAPER = {
     "eBay Kleinanzeigen": fetch_kleinanzeigen,
     "Maschinensucher": fetch_maschinensucher,
@@ -328,10 +404,12 @@ SCRAPER = {
     "Machineryline": fetch_machineryline,
     "Autoline": fetch_autoline,
     "tec24": fetch_tec24,
+    "Mascus": fetch_mascus,
 }
 
 
 # ---------------------------------------------------------------- Ablauf
+
 
 def gehoert_zu_ausschluss(titel: str, ausschluesse: list[str]) -> bool:
     titel_klein = titel.lower()

@@ -62,10 +62,19 @@ Portale, die tatsächlich durchsuchbar sind:
 | Portal | Status | Gruppe | Grund |
 |---|---|---|---|
 | eBay Kleinanzeigen | ✅ aktiv | alle | funktioniert zuverlässig |
+| tec24 | ✅ aktiv | alle | funktioniert zuverlässig, Land- und Baumaschinen |
+| Mascus | ✅ aktiv | alle | seit 06.09.2026, JSON-Schnittstelle statt HTML (s.u.), Land- und Baumaschinen |
 | Maschinensucher | ✅ aktiv | Baumaschine | funktioniert zuverlässig (eher Baumaschinen-Fokus) |
 | Machinerypark | ✅ aktiv | Baumaschine | funktioniert zuverlässig |
 | Machineryline | ✅ aktiv | Baumaschine | funktioniert zuverlässig, international |
-| Autoline | ⏸️ inaktiv | Baumaschine | technisch OK, aber Duplikate von Machineryline - Nutzerentscheidung, kein technisches Problem |
+| Autoline | ✅ aktiv | Baumaschine | seit 06.09.2026 wieder an; überschneidet sich stark mit Machineryline |
+
+**Mascus - Sonderfall:** Die Suchseite liefert kein HTML mit Treffern (deshalb stand Mascus
+früher unter "nicht nutzbar"). Die Daten kommen aber über die Next.js-Route
+`/_next/data/<buildId>/search.json?freetext=<begriff>` als sauberes JSON. Zwei Eigenheiten:
+Die `buildId` wechselt bei jedem Mascus-Deployment und wird deshalb bei jedem Lauf frisch von
+der Startseite gelesen; und sortieren geht nur *aufsteigend* nach Eintragsdatum, weshalb der
+Scraper die **letzte** Ergebnisseite liest (dort stehen dann die neuesten Inserate).
 
 ### Geprüfte, aber nicht nutzbare Portale
 
@@ -77,13 +86,12 @@ aufgenommen werden:
 
 | Portal | Grund | Kategorie des Problems |
 |---|---|---|
-| Agriaffaires (agriaffaires.de) | DataDome-Captcha (geo.captcha-delivery.com) | Bot-Schutz |
+| Agriaffaires (agriaffaires.de) | DataDome-Captcha, am 06.09.2026 erneut geprüft: HTTP 403 | Bot-Schutz |
 | Technikbörse (technikboerse.com) | Explizite Meldung "User-Agent spoofing detected" | Bot-Schutz |
 | MachineryZone (machineryzone.de) | DataDome-Captcha (gleiche Unternehmensgruppe wie Agriaffaires) | Bot-Schutz |
-| Baupool (baupool.com, nicht .de) | DataDome-Captcha (gleiche Unternehmensgruppe) | Bot-Schutz |
+| Baupool (baupool.com und .de) | DataDome-Captcha, am 06.09.2026 erneut geprüft: HTTP 403 | Bot-Schutz |
 | mobile.de | Blockt Skript-Zugriffe explizit mit "Access denied" (403) | Bot-Schutz |
 | Landwirt.com | `/kleinanzeigen?q=` wird serverseitig ignoriert, echte Suche läuft nur per JavaScript | Nur JS-Suche |
-| Mascus (mascus.de) | Suchergebnisse werden clientseitig nachgeladen, kein HTML-Inhalt beim Abruf | Nur JS-Suche |
 | Die Baumaschinen Börse (die-baumaschinen-boerse.de) | Suche nur über feste Hersteller-Dropdown, Takeuchi nicht gelistet | Keine passende Suche |
 | Baggerboerse.de (Zeppelin) | Kein Kauf-Marktplatz, sondern Ankaufs-/Bewertungsformular | Kein Marktplatz |
 | AutoScout24 | Reine PKW-Plattform, keine Baumaschinen-Kategorie | Nicht relevant |
