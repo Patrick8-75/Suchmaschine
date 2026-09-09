@@ -40,6 +40,13 @@ an - ein Eintrag pro Begriff mit `begriff` (Suchtext), `gruppe` (`Landmaschine` 
 Fehltreffer aus. Keine Programmierkenntnisse nötig - einfach die Datei bearbeiten und speichern,
 der nächste Lauf verwendet dann die neue Liste.
 
+**Nur Maschinen aus Europa** (Nutzerwunsch 09.09.2026): `scripts/europa.py` sortiert
+Angebote aus eindeutig außereuropäischen Ländern schon beim Suchlauf aus. Der Filter arbeitet
+bewusst vorsichtig mit einer Sperrliste statt einer Erlaubnisliste - ausgeschlossen wird nur,
+was positiv als außereuropäisch erkannt wird (ISO-Kürzel bei Mascus, deutsche Ländernamen bei
+den übrigen Portalen). Alles Unklare und alle Angebote ohne Ortsangabe bleiben drin, damit
+keine echte Maschine verlorengeht. Großbritannien, Türkei und Russland gelten als Europa.
+
 **Ersatzteile/Verschleißteile werden grundsätzlich nicht gemeldet** (Nutzerentscheidung) -
 `ist_ersatzteil()` in `scripts/maschinensuche_lokal.py` erkennt gängige Bezeichnungen (Gummikette,
 Laufrolle, Hydraulikpumpe, Fahrantrieb, Getriebe, Achse, Dichtung usw.) und filtert sie schon
