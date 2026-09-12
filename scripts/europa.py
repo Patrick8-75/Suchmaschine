@@ -32,6 +32,25 @@ NICHT_EU_NAMEN = {
     "kirgisistan", "tadschikistan", "mongolei", "nepal", "myanmar", "kambodscha",
     "laos", "kuba", "guatemala", "honduras", "nicaragua", "costa rica", "panama",
     "jamaika",
+    # Nachtrag 12.09.2026: "Papua-Neuguinea, Bank" war durchgerutscht - Liste um die
+    # restlichen Staaten Ozeaniens, Asiens, Afrikas und Amerikas ergaenzt.
+    "papua-neuguinea", "papua neuguinea", "fidschi", "samoa", "tonga", "vanuatu",
+    "salomonen", "neukaledonien", "franzoesisch-polynesien", "französisch-polynesien",
+    "guam", "mikronesien", "palau", "kiribati", "nauru", "tuvalu", "marshallinseln",
+    "china", "volksrepublik china", "suriname", "guyana", "franzoesisch-guayana",
+    "französisch-guayana", "haiti", "bahamas", "barbados", "grenada", "st. lucia",
+    "dominica", "antigua und barbuda", "puerto rico", "aruba", "curacao", "curaçao",
+    "bermuda", "groenland", "grönland", "island der jungferninseln",
+    "angola", "kamerun", "senegal", "mali", "niger", "tschad", "sudan", "suedsudan",
+    "südsudan", "somalia", "eritrea", "dschibuti", "ruanda", "burundi", "sambia",
+    "simbabwe", "mosambik", "botswana", "namibia", "lesotho", "eswatini", "malawi",
+    "madagaskar", "mauritius", "seychellen", "gabun", "kongo", "elfenbeinkueste",
+    "elfenbeinküste", "burkina faso", "benin", "togo", "guinea", "sierra leone",
+    "liberia", "gambia", "mauretanien", "kap verde",
+    # Georgien/Armenien/Aserbaidschan bewusst NICHT gesperrt - transkontinental wie
+    # Tuerkei und Russland, die ebenfalls als Europa gelten (Europarat/UEFA).
+    "bhutan", "malediven", "osttimor",
+    "brunei", "macau", "nordkorea",
 }
 
 
