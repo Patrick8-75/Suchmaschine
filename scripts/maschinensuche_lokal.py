@@ -437,6 +437,11 @@ ERSATZTEIL_BEGRIFFE = [
     "keilriemen", "zahnriemen", "dichtung", "bremsbelag", "kupplung", "hydraulikschlauch",
     "achse", "verschleißteile", "verschleissteile", "häckslermesser", "lagermaisschnecke",
     "teile", "ersatzkette", "warntafel", "haube", "spitze", "adaption", "pflückerkette",
+    # Nachtrag 18.09.2026 - englische Teilebezeichnungen von Mascus-Haendlern (Venlo).
+    # Vorher per Trockenlauf gegen treffer.csv geprueft: je genau 1 Treffer, beides Teile.
+    # NICHT aufgenommen: "bucket" (traefe "Takeuchi TB175W 3 Buckets!", eine echte
+    # Maschine) und "powertilt" (steht auch in echten Maschinentiteln).
+    "counterweight", "gegengewicht", "grouser",
 ]
 
 # "Kette"/"Ketten" als eigenständiges Wort (z.B. "Maispflücker Ketten 00...") ist ein

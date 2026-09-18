@@ -3,7 +3,7 @@
 Durchsucht mehrere Gebrauchtmaschinen-Portale nach Neumeldungen zu den in
 `config/suchbegriffe.json` hinterlegten Maschinentypen. Bei neuen Treffern wird
 1. `treffer.csv` ergänzt (komplette Historie, nie gelöscht),
-2. das Artifact **[Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
+2. das Artifact **[Maschinensuche-Radar](https://claude.ai/artifact/WFupkDrCne4fTEt3QbqwWG)** aktualisiert (zeigt nur die letzten 24h, Preis aufsteigend sortiert),
 3. eine Push-Benachrichtigung an Patrick geschickt.
 
 ## Wird manuell gestartet
@@ -110,7 +110,7 @@ bleibt nur die manuelle Suche im Browser.
 
 ## Ergebnisse ansehen
 
-- **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/code/artifact/ecedfcc4-3818-4dc2-b9f0-fcb53212d639) - wird bei jedem Handstart aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h raus.
+- **Live/aktuell (letzte 24h):** [Maschinensuche-Radar](https://claude.ai/artifact/WFupkDrCne4fTEt3QbqwWG) - wird bei jedem Handstart aktualisiert, Preis aufsteigend sortiert, ältere Treffer fallen nach 24h raus.
 - **Komplette Historie:** `treffer.csv` in diesem Ordner (z.B. mit Excel öffnen) - wird nie gelöscht.
 - **Push-Benachrichtigung:** bei neuen Treffern am Ende eines Laufs.
 
