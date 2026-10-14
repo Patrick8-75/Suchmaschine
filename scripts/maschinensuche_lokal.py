@@ -97,7 +97,28 @@ def extrahiere_betriebsstunden(text: str) -> str:
 # {"titel": ..., "preis": ..., "ort": ..., "inserat_datum": ..., "url": ..., "id": ...}
 
 
+def _ka_text_nach_icon(artikel, icon_name: str) -> str:
+    """Liest den Text, der im neuen Kleinanzeigen-Markup hinter einem Icon steht.
+
+    Ort und Datum sind dort nicht mehr ueber CSS-Klassen auffindbar, sondern haengen
+    jeweils als <span> neben einem <svg data-title="locationOutline"/"calendarOutline">.
+    """
+    svg = artikel.find("svg", attrs={"data-title": icon_name})
+    if not svg:
+        return ""
+    span = svg.find_next("span")
+    return span.get_text(strip=True) if span else ""
+
+
+KA_PREIS_REGEX = re.compile(r"(\d[\d.]*\s*€)|(^VB$)|(Zu verschenken)")
+
+
 def fetch_kleinanzeigen(suchbegriff: str) -> list[dict]:
+    # Kleinanzeigen hat sein Markup im Herbst 2026 auf Tailwind-Klassen umgestellt; die
+    # alten Selektoren (article.aditem, h2.text-module-begin, .aditem-main--*) existieren
+    # nicht mehr. Stabil geblieben sind die Attribute data-adid/data-href am <article>.
+    # Titel und Beschreibung kommen jetzt aus dem JSON-LD-Block der Anzeige, Ort und Datum
+    # haengen an den Icon-Markern, der Preis wird unter den <p> per Muster gefunden.
     slug = urllib.parse.quote(suchbegriff.strip().lower().replace(" ", "-"))
     url = f"https://www.kleinanzeigen.de/s-{slug}/k0"
     r = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=HTTP_TIMEOUT)
@@ -106,36 +127,46 @@ def fetch_kleinanzeigen(suchbegriff: str) -> list[dict]:
     soup = BeautifulSoup(r.text, "lxml")
 
     treffer = []
-    for art in soup.find_all("article", class_="aditem"):
+    for art in soup.find_all("article", attrs={"data-adid": True, "data-href": True}):
         adid = art.get("data-adid")
         href = art.get("data-href")
-        if not adid or not href:
-            continue
-        titel_tag = art.select_one("h2.text-module-begin a")
-        titel = titel_tag.get_text(strip=True) if titel_tag else ""
-        preis_tag = art.select_one("p.aditem-main--middle--price-shipping--price")
-        preis = preis_tag.get_text(strip=True) if preis_tag else ""
-        ort_tag = art.select_one(".aditem-main--top--left")
-        ort = ort_tag.get_text(strip=True) if ort_tag else ""
-        datum_tag = art.select_one(".aditem-main--top--right")
-        datum = datum_tag.get_text(strip=True) if datum_tag else ""
-        beschreibung_tag = art.select_one(".aditem-main--middle--description")
-        beschreibung_text = beschreibung_tag.get_text(" ", strip=True) if beschreibung_tag else ""
-        baujahr = extrahiere_baujahr(titel + " " + beschreibung_text)
-        betriebsstunden = extrahiere_betriebsstunden(titel + " " + beschreibung_text)
+
+        titel = ""
+        beschreibung_text = ""
+        for skript in art.find_all("script", type="application/ld+json"):
+            try:
+                daten = json.loads(skript.string or "{}")
+            except json.JSONDecodeError:
+                continue
+            titel = titel or (daten.get("title") or "")
+            beschreibung_text = beschreibung_text or (daten.get("description") or "")
+        if not titel:
+            # Rueckfalloption: der Linktext im Artikel traegt ebenfalls den Titel
+            link = art.find("a", href=href)
+            titel = link.get_text(" ", strip=True) if link else ""
+
+        preis = ""
+        for absatz in art.find_all("p"):
+            text = absatz.get_text(" ", strip=True)
+            if KA_PREIS_REGEX.search(text):
+                preis = text
+                break
+
+        volltext = f"{titel} {beschreibung_text}"
         treffer.append(
             {
                 "id": adid,
                 "titel": titel,
                 "preis": preis,
-                "ort": ort,
-                "inserat_datum": datum,
-                "baujahr": baujahr,
-                "betriebsstunden": betriebsstunden,
+                "ort": _ka_text_nach_icon(art, "locationOutline"),
+                "inserat_datum": _ka_text_nach_icon(art, "calendarOutline"),
+                "baujahr": extrahiere_baujahr(volltext),
+                "betriebsstunden": extrahiere_betriebsstunden(volltext),
                 "url": "https://www.kleinanzeigen.de" + href,
             }
         )
     return treffer
+
 
 
 def fetch_maschinensucher(suchbegriff: str) -> list[dict]:
@@ -442,6 +473,11 @@ ERSATZTEIL_BEGRIFFE = [
     # NICHT aufgenommen: "bucket" (traefe "Takeuchi TB175W 3 Buckets!", eine echte
     # Maschine) und "powertilt" (steht auch in echten Maschinentiteln).
     "counterweight", "gegengewicht", "grouser",
+    # Nachtrag 14.10.2026 - Anbaugeraete und Teile, die ueber Kleinanzeigen kamen.
+    # Je per Trockenlauf gegen treffer.csv geprueft, keine Fehltreffer.
+    "schlüsselanhänger", "schluesselanhänger", "sieblöffel", "siebloeffel",
+    "fällgreifer", "faellgreifer", "forstmulcher", "wurzelstockfräse",
+    "stubbenfräse", "woodcracker", "dieselmotor",
 ]
 
 # "Kette"/"Ketten" als eigenständiges Wort (z.B. "Maispflücker Ketten 00...") ist ein
@@ -466,6 +502,16 @@ MIETE_BEGRIFFE = [
     "mietmaschine", "leasing", "rental",
 ]
 MIETE_URL_SEGMENT_REGEX = re.compile(r"/miete/", re.IGNORECASE)
+
+
+# Gesuche statt Angebote: auf Kleinanzeigen stehen "Suche ..."-Anzeigen in derselben
+# Ergebnisliste wie Verkaufsangebote. Der serverseitige Filter (.../anzeige:angebote/k0)
+# ist keine Option - er liefert statt 25 nur 5 Treffer, verliert also die Relevanz.
+GESUCH_REGEX = re.compile(r"^\s*(suche|suchen|gesucht)(\s|$)", re.IGNORECASE)
+
+
+def ist_gesuch(titel: str) -> bool:
+    return bool(GESUCH_REGEX.search(titel))
 
 
 def ist_mietmaschine(titel: str, url: str) -> bool:
@@ -532,6 +578,8 @@ def hole_neue_treffer(
             continue
         if ist_ersatzteil(t["titel"]):
             continue
+        if ist_gesuch(t["titel"]):
+            continue  # "Suche ..."-Anzeige, kein Verkaufsangebot
         if ist_mietmaschine(t["titel"], t["url"]):
             continue
         if ist_ausserhalb_europas(t["ort"]):
